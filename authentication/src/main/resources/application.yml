@@ -1,0 +1,29 @@
+
+spring:
+  application:
+    name: tech-gather
+  config:
+    import: "aws-parameterstore:/tech-gather/dev/cognito/"
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+
+  security:
+    oauth2:
+      client:
+        registration:
+          cognito:
+            client-id: ${client-id}
+            client-secret: ${client-secret}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - openid
+              - email
+        provider:
+          cognito:
+            issuer-uri: ${issuer-uri}
+
+      resourceserver:
+        jwt:
+          issuer-uri: ${issuer-uri}
