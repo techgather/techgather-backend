@@ -1,29 +1,37 @@
 package authentication.config;
 
+import authentication.service.CustomOidcUserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final CustomOidcSuccessHandler oidcSuccessHandler;
+    private final CustomOidcUserService customOidcUserService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        AuthenticationSuccessHandler successHandler = new SimpleUrlAuthenticationSuccessHandler("/me");
 
-        http
+        return http
+                .csrf(csrf -> csrf.disable()) // h2 콘솔 접근 시 CSRF 끄기
+                .headers(headers -> headers
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable) // H2 콘솔은 iframe 사용
+                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index", "/logout").permitAll()
+                        .requestMatchers("/", "/logout", "/login/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll() // h2 콘솔만.
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .successHandler(successHandler)
+                        .userInfoEndpoint(u -> u.oidcUserService(customOidcUserService))
+                        .successHandler(oidcSuccessHandler)
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults())); // JWT 인증 활성화
-        return http.build();
+                .build();
     }
 }

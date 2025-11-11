@@ -13,4 +13,7 @@ public class CognitoProperties {
 
     @Value("${spring.security.oauth2.client.provider.cognito.issuer-uri}")
     private String issuerUri;
+
+    @Value("${spring.security.oauth2.client.registration.cognito.client-secret}")
+    private String clientSecret;
 }
