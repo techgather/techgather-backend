@@ -14,6 +14,7 @@ public class SecurityConfig {
 
     private final CustomOidcSuccessHandler oidcSuccessHandler;
     private final CustomOidcUserService customOidcUserService;
+    private final OAuth2LoginFailureHandler failureHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -31,6 +32,7 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(u -> u.oidcUserService(customOidcUserService))
                         .successHandler(oidcSuccessHandler)
+                        .failureHandler(failureHandler)
                 )
                 .build();
     }

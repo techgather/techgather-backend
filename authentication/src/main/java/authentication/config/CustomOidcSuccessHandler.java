@@ -50,7 +50,6 @@ public class CustomOidcSuccessHandler implements AuthenticationSuccessHandler {
         OidcUser oidcUser = (OidcUser) authentication.getPrincipal();
         OidcIdToken idToken = oidcUser.getIdToken();
 
-        System.out.println("expires_in??? " + accessToken.getExpiresAt());
         Map<String, Object> tokenResponse = Map.of(
                 "access_token", accessToken.getTokenValue(),
                 "id_token", idToken.getTokenValue(),

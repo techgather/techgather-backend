@@ -1,8 +1,10 @@
 package authentication.service;
 
+import authentication.domain.Role;
 import authentication.domain.User;
 import authentication.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -17,6 +19,7 @@ import java.util.Map;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CustomOidcUserService extends OidcUserService {
 
     private final UserRepository userRepository;
@@ -32,11 +35,20 @@ public class CustomOidcUserService extends OidcUserService {
         String provider = extractProvider(oidcUser);
 
         userRepository.findByEmail(email)
-                .ifPresentOrElse(u -> {
-                }, () -> {
-                    userRepository.save(User.builder()
-                            .email(email).name(name).picture(picture)
-                            .provider(provider).role("ROLE_USER")
+                .map(existing -> {
+                    log.info("기존 사용자 로그인: {}", existing.getEmail());
+                    existing.updateLastLogin(LocalDateTime.now());
+                    return existing;
+                })
+                .orElseGet(() -> {
+                    log.info("신규 사용자 가입: {}", email);
+                    return userRepository.save(User.builder()
+                            .email(email)
+                            .name(name)
+                            .picture(picture)
+                            .provider(provider)
+                            .role(Role.USER)
+                            .createdAt(LocalDateTime.now())
                             .lastLoginAt(LocalDateTime.now())
                             .build());
                 });

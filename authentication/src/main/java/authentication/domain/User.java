@@ -1,8 +1,7 @@
 package authentication.domain;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +9,8 @@ import java.time.LocalDateTime;
 @Table(name="users")
 @Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,7 +20,14 @@ public class User {
     private String name;
     private String picture;
     private String provider; // GOOGLE / APPLE / NAVER..
-    private String role;     // ROLE_USER / ROLE_ADMIN ...
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
     private LocalDateTime lastLoginAt;
+    private LocalDateTime createdAt;
+
+    public void updateLastLogin(LocalDateTime now) {
+        this.lastLoginAt = now;
+    }
 }
 

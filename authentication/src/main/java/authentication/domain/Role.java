@@ -1,2 +1,5 @@
-package authentication.domain;public enum Role {
+package authentication.domain;
+
+public enum Role {
+    USER, ADMIN
 }
