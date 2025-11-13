@@ -1,3 +1,5 @@
+server:
+  port: 5080
 
 spring:
   application:
@@ -17,6 +19,7 @@ spring:
             client-id: ${client-id}
             client-secret: ${client-secret}
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            domain-uri: ${domain-uri}
             authorization-grant-type: authorization_code
             scope:
               - openid

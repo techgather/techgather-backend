@@ -16,4 +16,8 @@ public class CognitoProperties {
 
     @Value("${spring.security.oauth2.client.registration.cognito.client-secret}")
     private String clientSecret;
+
+    @Value("${spring.security.oauth2.client.registration.cognito.domain-uri}")
+    private String domainUri;
+
 }

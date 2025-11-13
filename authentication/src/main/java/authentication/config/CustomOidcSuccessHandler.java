@@ -32,11 +32,10 @@ public class CustomOidcSuccessHandler implements AuthenticationSuccessHandler {
             Authentication authentication) throws IOException {
 
         OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
-        String registrationId = authToken.getAuthorizedClientRegistrationId();
 
         // Cognito Access/Refresh Token 가져오기
         OAuth2AuthorizedClient authorizedClient = clientService.loadAuthorizedClient(
-                registrationId,
+                authToken.getAuthorizedClientRegistrationId(),
                 authToken.getName()
         );
 
@@ -50,6 +49,7 @@ public class CustomOidcSuccessHandler implements AuthenticationSuccessHandler {
         OidcUser oidcUser = (OidcUser) authentication.getPrincipal();
         OidcIdToken idToken = oidcUser.getIdToken();
 
+        // Cognito refresh token은 조건부 발급이기 때문에 null 체크 필요
         Map<String, Object> tokenResponse = Map.of(
                 "access_token", accessToken.getTokenValue(),
                 "id_token", idToken.getTokenValue(),
