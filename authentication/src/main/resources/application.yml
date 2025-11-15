@@ -1,46 +1,40 @@
 server:
   port: 5080
-  forward-headers-strategy: framework #  redirect-uri, location 헤더 등을 HTTPS 기반으로 생성
+  forward-headers-strategy: framework
 
 spring:
+  profiles:
+    default: local   # 아무것도 지정하지 않으면 자동으로 local
+
   cloud:
     aws:
       region:
         static: ap-northeast-2
-
-  security:
-    oauth2:
-      client:
-        registration:
-          cognito:
-            client-id: ${client-id}
-            client-secret: ${client-secret}
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            domain-uri: ${domain-uri}
-            authorization-grant-type: authorization_code
-            scope:
-              - openid
-              - email
-              - profile
-        provider:
-          cognito:
-            issuer-uri: ${issuer-uri}
-
-      resourceserver:
-        jwt:
-          issuer-uri: ${issuer-uri}
 
   datasource:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
     username: sa
     password:
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+
   h2:
     console:
       enabled: true
       path: /h2-console
 
+  security:
+    oauth2:
+      client:
+        registration:
+          cognito:
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - openid
+              - email
+              - profile
