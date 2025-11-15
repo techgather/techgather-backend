@@ -18,6 +18,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
@@ -64,7 +65,14 @@ public class AuthController {
         String domain = cognitoProperties.getDomainUri();  //Hosted UI Domain
 
         // 임시값(향후 프론트로 변경)
-        String logoutRedirect = "http://localhost:5080/auth/me";
+        String proto = Optional.ofNullable(request.getHeader("X-Forwarded-Proto"))
+                .orElse(request.getScheme());
+
+        String host = Optional.ofNullable(request.getHeader("X-Forwarded-Host"))
+                .orElse(request.getServerName());
+
+        String logoutRedirect = proto + "://" + host + "/auth/me";
+
         String encodedLogoutRedirect = URLEncoder.encode(logoutRedirect, StandardCharsets.UTF_8);
 
         String redirectUrl = String.format("%s/logout?client_id=%s&logout_uri=%s",

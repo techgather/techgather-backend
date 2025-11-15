@@ -5,9 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -47,7 +45,7 @@ public class SecurityConfig {
                         .logoutUrl("/auth/logout")// 향후? 프론트에서 호출할 URL, stateless 시 제거
                         .clearAuthentication(true)
                         .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")      // 브라우저 쿠키까지 제거
+                        .deleteCookies("JSESSIONID")
                         .logoutSuccessUrl("/auth/me")
                 )
                 .build();
