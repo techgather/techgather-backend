@@ -1,0 +1,3 @@
+spring:
+  config:
+    import: "aws-parameterstore:/tech-gather/dev/cognito/"
