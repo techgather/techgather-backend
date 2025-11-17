@@ -19,7 +19,7 @@ public class User {
     @Column(unique=true, nullable=false) private String email;
     private String name;
     private String picture;
-    private String provider; // GOOGLE / APPLE / NAVER..
+    private Provider provider;
 
     @Enumerated(EnumType.STRING)
     private Role role;

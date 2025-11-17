@@ -9,7 +9,6 @@ dependencies {
     runtimeOnly 'com.h2database:h2'
 
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store:3.0.3'
-    implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager:3.0.3'
 
     compileOnly 'org.projectlombok:lombok:1.18.32'
     annotationProcessor 'org.projectlombok:lombok:1.18.32'

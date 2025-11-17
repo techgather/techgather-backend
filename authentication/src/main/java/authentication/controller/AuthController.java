@@ -27,36 +27,9 @@ public class AuthController {
 
     private final CognitoProperties cognitoProperties;
 
-    @GetMapping("/")
-    public String home() {
-        return """
-                <h1>홈</h1>
-                <a href="/oauth2/authorization/cognito">Cognito 로그인</a><br>
-                <a href="/auth/me">내 정보 보기</a><br>
-                <a href="/auth/logout">로그아웃</a>
-                """;
-    }
-
     @GetMapping("/me")
     public Object me(@AuthenticationPrincipal OidcUser oidcUser) {
         return oidcUser != null ? oidcUser.getClaims() : "로그인 안 됨";
-    }
-
-    @GetMapping("/token")
-    public Map<String, Object> tokens(
-            @RegisteredOAuth2AuthorizedClient("cognito") OAuth2AuthorizedClient client) {
-
-        String token = client.getAccessToken().getTokenValue()
-                .split("\\.")[1];
-        String json = new String(Base64.getUrlDecoder().decode(token));
-        String refreshToken = client.getRefreshToken() != null
-                ? client.getRefreshToken().getTokenValue()
-                : " No Refresh Token";
-
-        return Map.of(
-                "access_token", client.getAccessToken().getTokenValue(),
-                "access_token_json", json,
-                "refreshToken", refreshToken);
     }
 
     @GetMapping("/logout")

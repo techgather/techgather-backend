@@ -1,5 +1,6 @@
 package authentication.service;
 
+import authentication.domain.Provider;
 import authentication.domain.Role;
 import authentication.domain.User;
 import authentication.repository.UserRepository;
@@ -49,7 +50,7 @@ public class CustomOidcUserService extends OidcUserService {
                             .email(email)
                             .name(name)
                             .picture(picture)
-                            .provider(provider)
+                            .provider(Provider.GOOGLE)
                             .role(Role.USER)
                             .createdAt(LocalDateTime.now())
                             .lastLoginAt(LocalDateTime.now())
