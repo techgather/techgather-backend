@@ -1,6 +1,7 @@
 package authentication.service;
 
-import authentication.domain.Provider;
+import authentication.domain.AuthProvider;
+import authentication.domain.ExternalProvider;
 import authentication.domain.Role;
 import authentication.domain.User;
 import authentication.repository.UserRepository;
@@ -13,13 +14,14 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
-/*
- * OIDC 사용자 정보 로딩 및 사용자 DB 동기화 담당 서비스
- * - ID/Access Token 기반으로 OidcUser 생성
- * - 사용자 존재 여부 확인 후, 신규 가입 또는 마지막 로그인 시간 갱신
- * - OIDC 공급자 식별
+/**
+ * Cognito를 이용한 OIDC 로그인 서비스
+ *
+ * - 로그인 성공 후 기존 사용자는 사용자 정보를 갱신
+ * - 최초 로그인 사용자는 DB에 회원으로 저장하며
  */
 @Service
 @RequiredArgsConstructor
@@ -36,7 +38,7 @@ public class CustomOidcUserService extends OidcUserService {
         String email = (String) claims.get("email");
         String name  = (String) claims.getOrDefault("name", claims.getOrDefault("given_name", ""));
         String picture = (String) claims.getOrDefault("picture", "");
-        String provider = extractProvider(oidcUser);
+        ExternalProvider externalProvider = getExternalProvider(claims);
 
         userRepository.findByEmail(email)
                 .map(existing -> {
@@ -50,7 +52,8 @@ public class CustomOidcUserService extends OidcUserService {
                             .email(email)
                             .name(name)
                             .picture(picture)
-                            .provider(Provider.GOOGLE)
+                            .provider(AuthProvider.COGNITO)
+                            .externalProvider(externalProvider)
                             .role(Role.USER)
                             .createdAt(LocalDateTime.now())
                             .lastLoginAt(LocalDateTime.now())
@@ -61,12 +64,28 @@ public class CustomOidcUserService extends OidcUserService {
     }
 
     /*
-        google provider의 username은 google_로 시작
-        identities claim 활용 가능
+        identities json 구조 예시
+        "identities": [
+        {
+          "dateCreated": "1762595640793",
+          "userId": "116014585346982261063",
+          "providerName": "Google",
+          "providerType": "Google",
+          "issuer": null,
+          "primary": "true"
+        }
+  ]
      */
-    private String extractProvider(OidcUser user) {
-        String username = (String) user.getClaims().getOrDefault("username", "");
-        if (username.startsWith("google_")) return "GOOGLE";
-        return "COGNITO";
+    private ExternalProvider getExternalProvider(Map<String, Object> claims) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> identities = (Map<String, Object>) ((List) claims.get("identities")).get(0);
+
+        String externalProvider = (String) identities.get("providerName");
+        ExternalProvider provider = ExternalProvider.from(externalProvider);
+
+        if (provider == ExternalProvider.UNKNOWN) {
+            log.error("Unknown External Provider: {}", identities);
+        }
+        return provider;
     }
 }

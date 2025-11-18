@@ -12,7 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomOidcSuccessHandler oidcSuccessHandler;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final CustomOidcUserService customOidcUserService;
     private final OAuth2LoginFailureHandler failureHandler;
 
@@ -38,7 +38,7 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(u -> u.oidcUserService(customOidcUserService))
-                        .successHandler(oidcSuccessHandler)
+                        .successHandler(oAuth2LoginSuccessHandler)
                         .failureHandler(failureHandler)
                 )
                 .logout(logout -> logout
@@ -50,5 +50,4 @@ public class SecurityConfig {
                 )
                 .build();
     }
-
 }

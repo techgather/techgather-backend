@@ -19,7 +19,12 @@ public class User {
     @Column(unique=true, nullable=false) private String email;
     private String name;
     private String picture;
-    private Provider provider;
+
+    @Enumerated(EnumType.STRING)
+    private AuthProvider provider;
+
+    @Enumerated(EnumType.STRING)
+    private ExternalProvider externalProvider;
 
     @Enumerated(EnumType.STRING)
     private Role role;
