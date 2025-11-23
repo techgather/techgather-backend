@@ -1,6 +1,8 @@
 package authentication.config;
 
+import authentication.failure.OAuth2LoginFailureHandler;
 import authentication.service.CustomOidcUserService;
+import authentication.success.OAuth2LoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
