@@ -4,7 +4,7 @@ server:
 
 spring:
   profiles:
-    default: local   # 아무것도 지정하지 않으면 자동으로 local
+    default: dev   # 아무것도 지정하지 않으면 자동으로 dev
 
   cloud:
     aws:
@@ -38,3 +38,16 @@ spring:
               - openid
               - email
               - profile
+
+---
+spring:
+  config:
+    import: "aws-parameterstore:/tech-gather/dev/cognito/"
+  config.activate.on-profile: dev
+
+---
+spring:
+  config:
+    import: "aws-parameterstore:/tech-gather/prod/cognito/"
+  config.activate.on-profile: prod
+
