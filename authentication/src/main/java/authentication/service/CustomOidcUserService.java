@@ -4,11 +4,10 @@ import authentication.domain.AuthProvider;
 import authentication.domain.Role;
 import authentication.domain.User;
 import authentication.repository.UserRepository;
-import authentication.userinfo.OAuthUserInfo;
+import authentication.userinfo.CustomOAuthUserInfo;
 import authentication.userinfo.UserInfoFactory;
 import authentication.userinfo.oidc.CustomOidcUser;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -40,7 +39,7 @@ public class CustomOidcUserService extends OidcUserService {
     public OidcUser loadUser(OidcUserRequest req) throws OAuth2AuthenticationException {
         OidcUser oidcUser = super.loadUser(req);
         AuthProvider authProvider = getAuthProvider(oidcUser.getClaims());
-        OAuthUserInfo userInfo = userInfoFactory.create(authProvider, oidcUser.getAttributes());
+        CustomOAuthUserInfo userInfo = userInfoFactory.create(authProvider, oidcUser.getAttributes());
 
         saveOrUpdate(userInfo);
 
@@ -48,7 +47,7 @@ public class CustomOidcUserService extends OidcUserService {
     }
 
     @Transactional
-    public void saveOrUpdate(OAuthUserInfo userInfo) {
+    public void saveOrUpdate(CustomOAuthUserInfo userInfo) {
 
         String email = userInfo.getEmail();
         if (email == null) {
@@ -60,7 +59,7 @@ public class CustomOidcUserService extends OidcUserService {
             .orElseGet(() -> createNewUser(userInfo)); // 신규 회원
     }
 
-    private User createNewUser(OAuthUserInfo userInfo) {
+    private User createNewUser(CustomOAuthUserInfo userInfo) {
         return userRepository.save(
                 User.builder()
                         .email(userInfo.getEmail())

@@ -1,13 +1,13 @@
 package authentication.userinfo.oidc;
 
 import authentication.domain.AuthProvider;
-import authentication.userinfo.OAuthUserInfo;
+import authentication.userinfo.CustomOAuthUserInfo;
 import lombok.ToString;
 
 import java.util.Map;
 
 @ToString
-public class GoogleUserInfo implements OAuthUserInfo {
+public class GoogleUserInfo implements CustomOAuthUserInfo {
     private final Map<String, Object> attributes;
     private final AuthProvider authProvider;
 

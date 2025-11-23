@@ -20,9 +20,9 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class UserInfoFactory {
-    private final List<OAuthUserInfoCreator> creators;
+    private final List<CustomOAuthUserInfoCreator> creators;
 
-    public OAuthUserInfo create(AuthProvider provider, Map<String, Object> attributes) {
+    public CustomOAuthUserInfo create(AuthProvider provider, Map<String, Object> attributes) {
         return creators.stream()
                 .filter(c -> c.supports(provider))
                 .findFirst()

@@ -1,6 +1,6 @@
 package authentication.domain;
 
-import authentication.userinfo.OAuthUserInfo;
+import authentication.userinfo.CustomOAuthUserInfo;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,7 +29,7 @@ public class User {
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;
 
-    public User updateFrom(OAuthUserInfo userInfo) {
+    public User updateFrom(CustomOAuthUserInfo userInfo) {
         if (userInfo.getEmail() != null && !userInfo.getName().equals(this.name)) {
             this.name = userInfo.getName();
         }

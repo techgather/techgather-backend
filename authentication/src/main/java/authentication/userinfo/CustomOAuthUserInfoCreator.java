@@ -4,7 +4,7 @@ import authentication.domain.AuthProvider;
 
 import java.util.Map;
 
-public interface OAuthUserInfoCreator {
+public interface CustomOAuthUserInfoCreator {
     boolean supports(AuthProvider provider);
-    OAuthUserInfo create(Map<String, Object> attributes);
+    CustomOAuthUserInfo create(Map<String, Object> attributes);
 }

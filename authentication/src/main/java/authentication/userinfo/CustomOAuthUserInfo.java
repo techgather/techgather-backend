@@ -3,7 +3,7 @@ package authentication.userinfo;
 import authentication.domain.AuthProvider;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public interface OAuthUserInfo {
+public interface CustomOAuthUserInfo {
         String getEmail();
         String getName();
         String getPicture();

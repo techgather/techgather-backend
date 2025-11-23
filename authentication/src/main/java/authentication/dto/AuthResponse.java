@@ -1,6 +1,6 @@
 package authentication.dto;
 
-import authentication.userinfo.OAuthUserInfo;
+import authentication.userinfo.CustomOAuthUserInfo;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -10,7 +10,7 @@ import java.time.Instant;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record AuthResponse(
         @JsonProperty("user_info")
-        OAuthUserInfo userInfo,
+        CustomOAuthUserInfo userInfo,
 
         @JsonProperty("access_token")
         String accessToken,
