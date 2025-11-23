@@ -3,6 +3,7 @@ package authentication.config;
 import authentication.failure.OAuth2LoginFailureHandler;
 import authentication.service.CustomOidcUserService;
 import authentication.success.OAuth2LoginSuccessHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,11 +32,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/auth/",
-                                "/auth/me",
                                 "/auth/login/**",
                                 "/auth/logout/**")
                         .permitAll()
                         .requestMatchers("/h2-console/**").permitAll() // h2 콘솔만 임시
+                        .requestMatchers("/auth/me")
+                            .authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -48,8 +50,16 @@ public class SecurityConfig {
                         .clearAuthentication(true)
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
-                        .logoutSuccessUrl("/auth/me")
+                        .logoutSuccessUrl("/")
                 )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, authEx) -> {
+                            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            res.setContentType("application/json;charset=UTF-8");
+                            res.getWriter().write("{\"message\": \"Unauthorized\"}");
+                        })
+                )
+
                 .build();
     }
 }

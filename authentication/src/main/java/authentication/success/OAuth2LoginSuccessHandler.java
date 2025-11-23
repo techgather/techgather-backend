@@ -1,13 +1,16 @@
 package authentication.success;
 
 import authentication.dto.AuthResponse;
-import authentication.userinfo.OAuthUserInfo;
+import authentication.userinfo.CustomOAuthUserInfo;
 import authentication.userinfo.oidc.CustomOidcUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -43,7 +46,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
 
         Object principal = authentication.getPrincipal();
-        OAuthUserInfo userInfo = null;
+        CustomOAuthUserInfo userInfo = null;
         String idToken = null;
 
         if (principal instanceof CustomOidcUser oidcUser) {
@@ -73,6 +76,17 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 refreshToken != null ? refreshToken.getTokenValue() : null,
                 idToken
         );
+
+        Authentication newAuth = new UsernamePasswordAuthenticationToken(
+                userInfo,
+                authentication.getCredentials(),
+                authentication.getAuthorities()
+        );
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(newAuth);
+        SecurityContextHolder.setContext(context);
+        request.getSession(true).setAttribute("SPRING_SECURITY_CONTEXT", context);
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=UTF-8");
