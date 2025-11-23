@@ -1,10 +1,12 @@
 package authentication.service;
 
 import authentication.domain.AuthProvider;
-import authentication.domain.ExternalProvider;
 import authentication.domain.Role;
 import authentication.domain.User;
 import authentication.repository.UserRepository;
+import authentication.userinfo.OAuthUserInfo;
+import authentication.userinfo.UserInfoFactory;
+import authentication.userinfo.oidc.CustomOidcUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -12,80 +14,83 @@ import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Cognito를 이용한 OIDC 로그인 서비스
+ * OIDC 로그인 후 사용자 정보를 처리하는 Service
  *
- * - 로그인 성공 후 기존 사용자는 사용자 정보를 갱신
- * - 최초 로그인 사용자는 DB에 회원으로 저장하며
+ * - Provider(Cognito, Google 등)로부터 사용자 정보 조회
+ * - Provider attributes → OAuthUserInfo 공통 모델로 변환
+ * - DB에 회원 정보 신규 저장 또는 업데이트 (프로필 & 마지막 로그인 시간)
+ * - CustomOidcUser를 반환하여 인증 Principal로 사용
+ *  즉, SecurityContext에는 기본 OidcUser가 아닌 OAuthUserInfo가 포함된 CustomOidcUser가 저장
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class CustomOidcUserService extends OidcUserService {
 
     private final UserRepository userRepository;
+    private final UserInfoFactory userInfoFactory;
 
     @Override
     public OidcUser loadUser(OidcUserRequest req) throws OAuth2AuthenticationException {
         OidcUser oidcUser = super.loadUser(req);
-        Map<String, Object> claims = oidcUser.getClaims();
+        AuthProvider authProvider = getAuthProvider(oidcUser.getClaims());
+        OAuthUserInfo userInfo = userInfoFactory.create(authProvider, oidcUser.getAttributes());
 
-        String email = (String) claims.get("email");
-        String name  = (String) claims.getOrDefault("name", claims.getOrDefault("given_name", ""));
-        String picture = (String) claims.getOrDefault("picture", "");
-        ExternalProvider externalProvider = getExternalProvider(claims);
+        saveOrUpdate(userInfo);
 
-        userRepository.findByEmail(email)
-                .map(existing -> {
-                    log.info("User login: {}", existing.getEmail());
-                    existing.updateLastLogin(LocalDateTime.now());
-                    return existing;
-                })
-                .orElseGet(() -> {
-                    log.info("New user registration: {}", email);
-                    return userRepository.save(User.builder()
-                            .email(email)
-                            .name(name)
-                            .picture(picture)
-                            .provider(AuthProvider.COGNITO)
-                            .externalProvider(externalProvider)
-                            .role(Role.USER)
-                            .createdAt(LocalDateTime.now())
-                            .lastLoginAt(LocalDateTime.now())
-                            .build());
-                });
-
-        return oidcUser;
+        return new CustomOidcUser(oidcUser, userInfo);
     }
 
-    /*
-        identities json 구조 예시
-        "identities": [
-        {
-          "dateCreated": "1762595640793",
-          "userId": "116014585346982261063",
-          "providerName": "Google",
-          "providerType": "Google",
-          "issuer": null,
-          "primary": "true"
-        }
-  ]
-     */
-    private ExternalProvider getExternalProvider(Map<String, Object> claims) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> identities = (Map<String, Object>) ((List) claims.get("identities")).get(0);
+    @Transactional
+    public void saveOrUpdate(OAuthUserInfo userInfo) {
 
-        String externalProvider = (String) identities.get("providerName");
-        ExternalProvider provider = ExternalProvider.from(externalProvider);
-
-        if (provider == ExternalProvider.UNKNOWN) {
-            log.error("Unknown External Provider: {}", identities);
+        String email = userInfo.getEmail();
+        if (email == null) {
+            throw new OAuth2AuthenticationException("Email not provided by provider");
         }
-        return provider;
+
+        userRepository.findByEmail(email)
+            .map(user -> user.updateFrom(userInfo))   // 기존 회원 -> 업데이트
+            .orElseGet(() -> createNewUser(userInfo)); // 신규 회원
+    }
+
+    private User createNewUser(OAuthUserInfo userInfo) {
+        return userRepository.save(
+                User.builder()
+                        .email(userInfo.getEmail())
+                        .name(userInfo.getName())
+                        .picture(userInfo.getPicture())
+                        .provider(userInfo.getAuthProvider())
+                        .role(Role.USER)
+                        .createdAt(LocalDateTime.now())
+                        .lastLoginAt(LocalDateTime.now())
+                        .build()
+        );
+    }
+
+    private AuthProvider getAuthProvider(Map<String, Object> claims) {
+        Object identitiesObj = claims.get("identities");
+
+        // identities가 비었다면, cognito 직접 로그인
+        if (!(identitiesObj instanceof List<?> list) || list.isEmpty()) {
+            return AuthProvider.COGNITO;
+        }
+
+        // identity와 providerName 타입 체크
+        Object first = list.get(0);
+        if (!(first instanceof Map<?, ?> identity)){
+            return AuthProvider.UNKNOWN;
+        }
+        if (!(identity.get("providerName") instanceof String providerName)) {
+            return AuthProvider.UNKNOWN;
+        }
+
+        return AuthProvider.from(providerName);
     }
 }
