@@ -1,0 +1,211 @@
+spring:
+  kafka:
+    topic: post
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+target:
+  actives: woowahan,toss,musinsa,kurly,kakao,devsisters,line,daangn,watcha,yogiyo,ridi,nhn,velog,gaeraeblog,44bits
+  entries:
+    woowahan:
+      url: https://techblog.woowahan.com/feed
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: true
+          defaultThumbnail: https://techblog.woowahan.com/wp-content/uploads/2022/01/woowahan-logo.png
+    toss:
+      url: https://toss.tech/rss.xml
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    musinsa:
+      url: https://medium.com/feed/musinsa-tech
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+#    naver: rss version 이 다름 (1.0)
+#      url: https://d2.naver.com/d2.atom
+#      adapter:
+#        crawler:
+#          type: htmlCrawler
+#        extractor:
+#          type: rssExtractor
+#          useDefaultThumbnail: false
+#          defaultThumbnail: ""
+    kurly:
+      url: https://helloworld.kurly.com/feed.xml
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    kakao:
+      url: https://tech.kakaoenterprise.com/feed
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    devsisters:
+      url: https://tech.devsisters.com/rss.xml
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    line:
+      url: https://engineering.linecorp.com/ko/feed/index.html
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+#    coupang: # 페이지 자체의 파싱 에러
+#      url: https://medium.com/feed/coupang-engineering
+#      adapter:
+#        crawler:
+#          type: htmlCrawler
+#        extractor:
+#          type: rssExtractor
+#          useDefaultThumbnail: false
+#          defaultThumbnail: ""
+    daangn:
+      url: https://medium.com/feed/daangn
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+#    zigbang: # 페이지 자체의 파싱 에러
+#      url: https://medium.com/feed/zigbang
+#      adapter:
+#        crawler:
+#          type: htmlCrawler
+#        extractor:
+#          type: rssExtractor
+#          useDefaultThumbnail: false
+#          defaultThumbnail: ""
+    watcha:
+      url: https://medium.com/feed/watcha
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    banksalad:
+      url: https://blog.banksalad.com/rss.xml
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+#    hyperconnect: # rss version 이 다름 (1.0)
+#      url: https://hyperconnect.github.io/feed.xml
+#      adapter:
+#        crawler:
+#          type: htmlCrawler
+#        extractor:
+#          type: rssExtractor
+#          useDefaultThumbnail: true
+#          defaultThumbnail: https://hyperconnect.github.io/assets/opengraph_default_image.jpg
+    yogiyo:
+      url: https://techblog.yogiyo.co.kr/feed
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+#    socar: # rss version 이 다름 (1.0)
+#      url: https://tech.socarcorp.kr/feed
+#      adapter:
+#        crawler:
+#          type: htmlCrawler
+#        extractor:
+#          type: rssExtractor
+#          useDefaultThumbnail: false
+#          defaultThumbnail: ""
+    ridi:
+      url: https://ridicorp.com/feed/
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    nhn:
+      url: https://meetup.toast.com/rss
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+#    geeknews: # rss version 이 다름 (1.0)
+#      url: https://feeds.feedburner.com/geeknews-feed
+#      adapter:
+#        crawler:
+#          type: htmlCrawler
+#        extractor:
+#          type: rssExtractor
+#          useDefaultThumbnail: false
+#          defaultThumbnail: ""
+    velog:
+      url: https://v2.velog.io/rss/
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: https://images.velog.io/velog.png
+    gaeraeblog:
+      url: https://feeds.feedburner.com/gaeraeblog
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    44bits:
+      url: https://www.44bits.io/ko/feed/all
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssExtractor
+          useDefaultThumbnail: true
+          defaultThumbnail: ""
