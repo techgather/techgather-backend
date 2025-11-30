@@ -1,7 +1,7 @@
 package domain.repository.impl;
 
 import application.generator.SnowFlake;
-import domain.repository.CustomPostTagRepository;
+import domain.repository.CustomBatchPostTagRepository;
 import domain.vo.PostTag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -14,7 +14,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class CustomPostTagRepositoryImpl implements CustomPostTagRepository {
+public class CustomBatchPostTagRepositoryImpl implements CustomBatchPostTagRepository {
 
 	private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 	private final SnowFlake snowflake = SnowFlake.getInstance();
