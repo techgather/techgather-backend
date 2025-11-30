@@ -1,7 +1,7 @@
 package domain.repository.impl;
 
 import domain.entity.Tag;
-import domain.repository.CustomTagRepository;
+import domain.repository.CustomBatchTagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -13,7 +13,7 @@ import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
-public class CustomTagRepositoryImpl implements CustomTagRepository {
+public class CustomBatchTagRepositoryImpl implements CustomBatchTagRepository {
 
 	private final JdbcTemplate jdbcTemplate;
 	private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;

@@ -28,7 +28,7 @@ public class BatchJobScheduler {
         this.rssFeedsCollectJob = rssFeedsCollectJob;
     }
 
-    @Scheduled(cron = "0 0 */3 * * *")
+    @Scheduled(cron = "*/10 * * * * *")
     public void runRssFeedsCollectJob() {
         try {
             String createDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
