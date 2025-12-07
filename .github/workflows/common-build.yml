@@ -1,0 +1,66 @@
+name: Common Build Workflow
+
+on:
+  workflow_call:
+    inputs:
+      module:
+        required: true
+        type: string
+      gradle_task:
+        required: true
+        type: string
+      docker_context:
+        required: true
+        type: string
+      dockerfile:
+        required: true
+        type: string
+      image_name:
+        required: true
+        type: string
+      branch_name:
+        required: true
+        type: string
+    secrets:
+      DOCKER_REPO:
+        required: true
+      DOCKER_USERNAME:
+        required: true
+      DOCKER_PASSWORD:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Gradle Build (skip tests)
+        run: |
+          ./gradlew :${{ inputs.module }}:${{ inputs.gradle_task }} -x test --no-daemon
+
+      - name: Docker Build
+        if: inputs.branch_name == 'development' || inputs.branch_name == 'master'
+        run: |
+          docker build \
+            -f ${{ inputs.dockerfile }} \
+            -t ${{ secrets.DOCKER_REPO }}:${{ inputs.image_name }}-latest \
+            -t ${{ secrets.DOCKER_REPO }}:${{ inputs.image_name }}-${{ github.sha }} \
+            ${{ inputs.docker_context }}
+
+      - name: DockerHub Login
+        if: inputs.branch_name == 'master'
+        run: |
+          docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+
+      - name: Docker Push
+        if: inputs.branch_name == 'master'
+        run: |
+          docker push ${{ secrets.DOCKER_REPO }}:${{ inputs.image_name }}-latest
+          docker push ${{ secrets.DOCKER_REPO }}:${{ inputs.image_name }}-${{ github.sha }}

@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  api:
+    mem_limit: 450m
+    memswap_limit: 700m
+    image: "${DOCKER_REPO}:api-latest"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    container_name: api
+    ports:
+      - "8888:8888"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: >
+        -XX:MaxRAMPercentage=65
+        -XX:InitialRAMPercentage=30
+    restart: always
+
+  authentication:
+    mem_limit: 300m
+    memswap_limit: 500m
+    image: "${DOCKER_REPO}:authentication-latest"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    container_name: authentication
+    ports:
+      - "5080:5080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: >
+        -XX:MaxRAMPercentage=60
+        -XX:InitialRAMPercentage=25
+    restart: always

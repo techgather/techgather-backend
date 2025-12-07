@@ -1,0 +1,171 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - "feature/*"
+      - "development"
+      - "master"
+
+  workflow_dispatch:
+    inputs:
+      target_service:
+        type: choice
+        description: "배포할 서비스 선택"
+        options:
+          - api
+          - authentication
+          - batch
+          - collector
+
+jobs:
+  detect_changes:
+    runs-on: ubuntu-latest
+    outputs:
+      auth_changed: ${{ steps.filter.outputs.auth }}
+      api_changed: ${{ steps.filter.outputs.api }}
+      batch_changed: ${{ steps.filter.outputs.batch }}
+      collector_changed: ${{ steps.filter.outputs.collector }}
+      common_changed: ${{ steps.filter.outputs.common }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            auth:
+              - 'authentication/**'
+            api:
+              - 'api/**'
+            batch:
+              - 'batch/**'
+            collector:
+              - 'collector/**'
+            common:
+              - 'application/**'
+              - 'domain/**'
+
+  authentication-test:
+    needs: detect_changes
+    if: github.event_name == 'push' && (
+      needs.detect_changes.outputs.auth_changed == 'true' ||
+      needs.detect_changes.outputs.common_changed == 'true'
+      )
+    uses: ./.github/workflows/common-test.yml
+    with:
+      module: "authentication"
+
+  authentication:
+    needs: authentication-test
+    uses: ./.github/workflows/common-build.yml
+    with:
+      module: "authentication"
+      gradle_task: "build"
+      docker_context: "authentication"
+      dockerfile: "authentication/Dockerfile"
+      image_name: "authentication"
+      branch_name: ${{ github.ref_name }}
+    secrets: inherit
+
+  api-test:
+    needs: detect_changes
+    if: github.event_name == 'push' && (
+      needs.detect_changes.outputs.api_changed == 'true' ||
+      needs.detect_changes.outputs.common_changed == 'true'
+      )
+    uses: ./.github/workflows/common-test.yml
+    with:
+      module: "api"
+  api:
+    needs: api-test
+    uses: ./.github/workflows/common-build.yml
+    with:
+      module: "api"
+      gradle_task: "build"
+      docker_context: "api"
+      dockerfile: "api/Dockerfile"
+      image_name: "api"
+      branch_name: ${{ github.ref_name }}
+    secrets: inherit
+
+  batch-test:
+    needs: detect_changes
+    if: github.event_name == 'push' && (
+      needs.detect_changes.outputs.batch_changed == 'true' ||
+      needs.detect_changes.outputs.common_changed == 'true'
+      )
+    uses: ./.github/workflows/common-test.yml
+    with:
+      module: "batch"
+  batch:
+    needs: batch-test
+    uses: ./.github/workflows/common-build.yml
+    with:
+      module: "batch"
+      gradle_task: "build"
+      docker_context: "batch"
+      dockerfile: "batch/Dockerfile"
+      image_name: "batch"
+      branch_name: ${{ github.ref_name }}
+    secrets: inherit
+
+  collector-test:
+    needs: detect_changes
+    if: github.event_name == 'push' && (
+      needs.detect_changes.outputs.collector_changed == 'true' ||
+      needs.detect_changes.outputs.common_changed == 'true'
+      )
+    uses: ./.github/workflows/common-test.yml
+    with:
+      module: "collector"
+  collector:
+    needs: collector-test
+    uses: ./.github/workflows/common-build.yml
+    with:
+      module: "collector"
+      gradle_task: "bootJar"
+      docker_context: "."
+      dockerfile: "collector/Dockerfile"
+      image_name: "collector"
+      branch_name: ${{ github.ref_name }}
+    secrets: inherit
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create SSH key file
+        run: |
+          echo "${{ secrets.EC2_KEY }}" > ec2_key.pem
+          chmod 600 ec2_key.pem
+      - name: Upload deploy files
+        run: |
+          scp -i ec2_key.pem -o StrictHostKeyChecking=no \
+            deploy/docker-compose.yml \
+            ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/tech-gather/
+          
+          scp -i ec2_key.pem -o StrictHostKeyChecking=no \
+            deploy/deploy.sh \
+            ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/tech-gather/
+
+          scp -i ec2_key.pem -o StrictHostKeyChecking=no deploy/services.json \
+            ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/tech-gather/
+
+      - name: Deploy on EC2
+        run: |
+          TARGET="${{ github.event.inputs.target_service }}"
+          
+          ssh -i ec2_key.pem -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} "
+            cd /home/ec2-user/tech-gather/
+            chmod +x deploy.sh
+          
+            docker login -u '${{ secrets.DOCKER_USERNAME }}' -p '${{ secrets.DOCKER_PASSWORD }}'
+
+            export DOCKER_REPO=${{ secrets.DOCKER_REPO }};
+            ./deploy.sh $TARGET
+          "

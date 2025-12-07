@@ -1,0 +1,9 @@
+{
+  "api": {
+    "port": 8888,
+    "health": "/api/actuator/health" },
+  "authentication": {
+    "port": 5080,
+    "health": "/actuator/health"
+  }
+}
