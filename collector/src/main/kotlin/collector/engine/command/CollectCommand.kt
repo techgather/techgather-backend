@@ -1,7 +1,7 @@
 package collector.engine.command
 
 class CollectCommand(
-    val name: String,
     val url: String,
+    val siteInfo: SiteInfo,
     val extractCommand: ExtractCommand,
 )
