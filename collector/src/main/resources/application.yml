@@ -9,7 +9,7 @@ spring:
         spring.json.add.type.headers: false
 
 target:
-  actives: woowahan,toss,musinsa,kurly,kakao,devsisters,line,daangn,watcha,yogiyo,ridi,nhn,velog,gaeraeblog,44bits
+  actives: woowahan,toss,musinsa,kurly,kakao,devsisters,line,daangn,watcha,yogiyo,ridi,nhn,gaeraeblog,44bits
   entries:
     woowahan:
       url: https://techblog.woowahan.com/feed
@@ -182,15 +182,6 @@ target:
 #          type: rssExtractor
 #          useDefaultThumbnail: false
 #          defaultThumbnail: ""
-    velog:
-      url: https://v2.velog.io/rss/
-      adapter:
-        crawler:
-          type: htmlCrawler
-        extractor:
-          type: rssExtractor
-          useDefaultThumbnail: false
-          defaultThumbnail: https://images.velog.io/velog.png
     gaeraeblog:
       url: https://feeds.feedburner.com/gaeraeblog
       adapter:
