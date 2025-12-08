@@ -4,7 +4,7 @@ import domain.entity.Tag;
 
 import java.util.List;
 
-public interface CustomTagRepository {
+public interface CustomBatchTagRepository {
 
 	void saveAllTag(List<Tag> tags);
 }

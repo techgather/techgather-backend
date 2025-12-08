@@ -4,9 +4,9 @@ import application.generator.SnowFlake;
 import batch.message.RssFeedMessage;
 import domain.entity.Post;
 import domain.entity.Tag;
-import domain.repository.CustomPostRepository;
-import domain.repository.CustomPostTagRepository;
-import domain.repository.CustomTagRepository;
+import domain.repository.CustomBatchPostRepository;
+import domain.repository.CustomBatchPostTagRepository;
+import domain.repository.CustomBatchTagRepository;
 import domain.util.TagNormalizerUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -23,9 +23,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 
-	private final CustomPostRepository customPostRepository;
-	private final CustomPostTagRepository customPostTagRepository;
-	private final CustomTagRepository customTagRepository;
+	private final CustomBatchPostRepository customBatchPostRepository;
+	private final CustomBatchPostTagRepository customBatchPostTagRepository;
+	private final CustomBatchTagRepository customBatchTagRepository;
 	private final SnowFlake snowflake = SnowFlake.getInstance();
 
 	@Override
@@ -57,12 +57,12 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 			List<Tag> tags = tagNames.stream()
 					.map(name -> Tag.create(snowflake.nextId(), name))
 					.toList();
-			customTagRepository.saveAllTag(tags);
+			customBatchTagRepository.saveAllTag(tags);
 		}
 
 		List<Post> posts = convertToPosts(items);
 		if (!CollectionUtils.isEmpty(posts)) {
-			customPostRepository.saveAllPost(posts);
+			customBatchPostRepository.saveAllPost(posts);
 		}
 		savePostTags(items);
 	}
@@ -70,7 +70,7 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 	private List<String> extractTagNames(List<RssFeedMessage> items) {
 		TagNormalizerUtils normalizer = TagNormalizerUtils.getInstance();
 		return items.stream()
-				.filter(msg -> CollectionUtils.isEmpty(msg.tags()) && msg.tags() != null)
+				.filter(msg -> !CollectionUtils.isEmpty(msg.tags()))
 				.flatMap(msg -> msg.tags().stream())
 				.map(normalizer::normalize)
 				.distinct()
@@ -81,7 +81,7 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 		TagNormalizerUtils normalizer = TagNormalizerUtils.getInstance();
 
 		Map<String, List<String>> urlToTagsMap = items.stream()
-				.filter(msg -> CollectionUtils.isEmpty(msg.tags()) && msg.tags() != null)
+				.filter(msg -> !CollectionUtils.isEmpty(msg.tags()))
 				.collect(Collectors.groupingBy(
 					RssFeedMessage::url,
 					Collectors.flatMapping(
@@ -109,7 +109,7 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 			})
 		);
 
-		customPostTagRepository.saveAllUrlAndTag(allUrls, allTags);
+		customBatchPostTagRepository.saveAllUrlAndTag(allUrls, allTags);
 	}
 
 	private List<Post> convertToPosts(List<RssFeedMessage> items) {
