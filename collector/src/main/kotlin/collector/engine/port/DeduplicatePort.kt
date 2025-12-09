@@ -1,8 +1,8 @@
 package collector.engine.port
 
-import collector.engine.model.Message
+import collector.engine.model.ExtractedMessage
 
 interface DeduplicatePort {
 
-    fun deduplicate(messages: List<Message>): List<Message>
+    fun deduplicate(messages: List<ExtractedMessage>): List<ExtractedMessage>
 }

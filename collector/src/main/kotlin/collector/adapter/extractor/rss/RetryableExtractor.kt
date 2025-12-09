@@ -1,7 +1,7 @@
 package collector.adapter.extractor.rss
 
 import collector.engine.command.ExtractCommand
-import collector.engine.model.Message
+import collector.engine.model.ExtractedMessage
 import collector.engine.port.Extractor
 import collector.engine.port.dto.CrawlingResult
 import collector.utils.retry.retrySuspend
@@ -11,7 +11,7 @@ abstract class RetryableExtractor: Extractor {
 
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    override suspend fun extract(crawlingResult: CrawlingResult, extractCommand: ExtractCommand): List<Message> {
+    override suspend fun extract(crawlingResult: CrawlingResult, extractCommand: ExtractCommand): List<ExtractedMessage> {
 
         return retrySuspend(
             maxAttempts = 3,
@@ -26,9 +26,9 @@ abstract class RetryableExtractor: Extractor {
     protected abstract suspend fun doExtract(
         crawlingResult: CrawlingResult,
         extractCommand: ExtractCommand
-    ): List<Message>
+    ): List<ExtractedMessage>
 
-    private fun recoverForExtract(): List<Message> {
+    private fun recoverForExtract(): List<ExtractedMessage> {
 
         return listOf()
     }

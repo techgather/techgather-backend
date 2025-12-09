@@ -1,6 +1,7 @@
 package collector.worker
 
 import collector.engine.CollectEngine
+import collector.engine.model.Language
 import collector.engine.port.DeduplicatePort
 import collector.engine.port.Publisher
 import collector.worker.config.TargetProps
@@ -24,6 +25,7 @@ class CollectorFactory (
 
         return Collector(
             name = target,
+            language = Language.from(config.language),
             collectionTask = CollectionTask(
                 url = config.url,
                 extractTask = ExtractTask(

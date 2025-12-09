@@ -10,6 +10,7 @@ class TargetProperties(
 
 data class TargetProps(
     var url: String = "",
+    var language: String = "KO",
     var adapter: AdapterProps,
 )
 

@@ -2,7 +2,7 @@ package collector.adapter.extractor.rss
 
 import collector.adapter.extractor.thumbnail.ThumbnailDownloader
 import collector.engine.command.ExtractCommand
-import collector.engine.model.Message
+import collector.engine.model.ExtractedMessage
 import collector.engine.port.dto.CrawlingResult
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import kotlinx.coroutines.async
@@ -18,7 +18,7 @@ open class RssExtractor(
     private val xmlMapper = XmlMapper().findAndRegisterModules()
     private val illegalXmlCharsRegex = Regex("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]")
 
-    override suspend fun doExtract(crawlingResult: CrawlingResult, extractCommand: ExtractCommand): List<Message> = coroutineScope {
+    override suspend fun doExtract(crawlingResult: CrawlingResult, extractCommand: ExtractCommand): List<ExtractedMessage> = coroutineScope {
 
         val sanitizedBody = illegalXmlCharsRegex.replace(crawlingResult.body, "")
 
@@ -26,7 +26,7 @@ open class RssExtractor(
         
         return@coroutineScope rss.channel.items?.map { item ->
             async {
-                Message(
+                ExtractedMessage(
                     title = item.title,
                     url = item.link,
                     pubDate = item.pubDate,
