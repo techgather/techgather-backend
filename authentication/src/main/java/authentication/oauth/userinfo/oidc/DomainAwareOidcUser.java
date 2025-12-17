@@ -1,7 +1,7 @@
-package authentication.userinfo.oidc;
+package authentication.oauth.userinfo.oidc;
 
 
-import authentication.userinfo.CustomOAuthUserInfo;
+import authentication.oauth.userinfo.OAuthUserInfo;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
@@ -11,23 +11,21 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * Spring Security 기본 OidcUser에 서비스 공통 사용자 정보(OAuthUserInfo)를 추가한 인증 Principal
+ * Domain-aware OIDC Principal
  *
- * - 원본 OidcUser(delegate)의 권한/클레임/토큰 정보는 그대로 유지
- * - Provider별 attributes가 저장된 OAuthUserInfo를 함께 보관
- *
+ * Spring Security 기본 {@link OidcUser}를 위임(delegate)하여 권한, 클레임, 토큰 정보는 유지하여,
+ * 서비스 도메인에서 사용하는 {@link OAuthUserInfo}를 함께 보관한다.
  */
+public class DomainAwareOidcUser implements OidcUser {
+    private final OidcUser delegate;
+    private final OAuthUserInfo userInfo;
 
-public class CustomOidcUser implements OidcUser {
-    private final OidcUser delegate;        // 원본 객체
-    private final CustomOAuthUserInfo userInfo;   // sucessHandler에서도 사용할 추가 정보
-
-    public CustomOidcUser(OidcUser delegate, CustomOAuthUserInfo userInfo) {
+    public DomainAwareOidcUser(OidcUser delegate, OAuthUserInfo userInfo) {
         this.delegate = delegate;
         this.userInfo = userInfo;
     }
 
-    public CustomOAuthUserInfo getOAuthUserInfo() {
+    public OAuthUserInfo getOAuthUserInfo() {
         return userInfo;
     }
 

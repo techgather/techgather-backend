@@ -1,6 +1,6 @@
-package authentication.domain;
+package domain.entity;
 
-import authentication.userinfo.CustomOAuthUserInfo;
+import domain.vo.OAuthUserProfile;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,15 +29,15 @@ public class User {
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;
 
-    public User updateFrom(CustomOAuthUserInfo userInfo) {
-        if (userInfo.getEmail() != null && !userInfo.getName().equals(this.name)) {
-            this.name = userInfo.getName();
+    public User updateFrom(OAuthUserProfile userProfile) {
+        if (userProfile.email() != null && !userProfile.name().equals(this.name)) {
+            this.name = userProfile.name();
         }
-        if (userInfo.getPicture() != null && !userInfo.getPicture().equals(this.picture)) {
-            this.picture = userInfo.getPicture();
+        if (userProfile.picture() != null && !userProfile.picture().equals(this.picture)) {
+            this.picture = userProfile.picture();
         }
-        if (userInfo.getAuthProvider() != null && userInfo.getAuthProvider() != this.provider) {
-            this.provider = userInfo.getAuthProvider();
+        if (userProfile.provider() != null && userProfile.provider() != this.provider) {
+            this.provider = userProfile.provider();
         }
         this.lastLoginAt = LocalDateTime.now();
 

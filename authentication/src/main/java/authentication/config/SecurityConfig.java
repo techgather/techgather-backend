@@ -1,8 +1,8 @@
 package authentication.config;
 
-import authentication.failure.OAuth2LoginFailureHandler;
-import authentication.service.CustomOidcUserService;
-import authentication.success.OAuth2LoginSuccessHandler;
+import authentication.oauth.handler.OAuth2LoginFailureHandler;
+import authentication.oauth.service.OidcUserSyncService;
+import authentication.oauth.handler.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-    private final CustomOidcUserService customOidcUserService;
+    private final OidcUserSyncService customOidcUserService;
     private final OAuth2LoginFailureHandler failureHandler;
 
     @Bean

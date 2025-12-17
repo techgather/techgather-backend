@@ -1,6 +1,6 @@
-package authentication.dto;
+package authentication.controller.dto;
 
-import authentication.domain.AuthProvider;
+import domain.entity.AuthProvider;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

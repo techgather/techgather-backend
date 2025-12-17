@@ -1,6 +1,6 @@
-package authentication.repository;
+package domain.repository;
 
-import authentication.domain.User;
+import domain.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

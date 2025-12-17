@@ -1,4 +1,4 @@
-package authentication.failure;
+package authentication.oauth.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.Map;
 
 @Component
-@Slf4j
 @RequiredArgsConstructor
 public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
 

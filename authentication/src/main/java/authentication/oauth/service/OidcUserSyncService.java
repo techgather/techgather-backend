@@ -1,12 +1,13 @@
-package authentication.service;
+package authentication.oauth.service;
 
-import authentication.domain.AuthProvider;
-import authentication.domain.Role;
-import authentication.domain.User;
-import authentication.repository.UserRepository;
-import authentication.userinfo.CustomOAuthUserInfo;
-import authentication.userinfo.UserInfoFactory;
-import authentication.userinfo.oidc.CustomOidcUser;
+import domain.repository.UserRepository;
+import authentication.oauth.userinfo.OAuthUserInfo;
+import authentication.oauth.userinfo.UserInfoFactory;
+import authentication.oauth.userinfo.oidc.DomainAwareOidcUser;
+import domain.entity.AuthProvider;
+import domain.entity.Role;
+import domain.entity.User;
+import domain.vo.OAuthUserProfile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
@@ -19,18 +20,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-/**
- * OIDC 로그인 후 사용자 정보를 처리하는 Service
- *
- * - Provider(Cognito, Google 등)로부터 사용자 정보 조회
- * - Provider attributes → OAuthUserInfo 공통 모델로 변환
- * - DB에 회원 정보 신규 저장 또는 업데이트 (프로필 & 마지막 로그인 시간)
- * - CustomOidcUser를 반환하여 인증 Principal로 사용
- *  즉, SecurityContext에는 기본 OidcUser가 아닌 OAuthUserInfo가 포함된 CustomOidcUser가 저장
- */
 @Service
 @RequiredArgsConstructor
-public class CustomOidcUserService extends OidcUserService {
+public class OidcUserSyncService extends OidcUserService {
 
     private final UserRepository userRepository;
     private final UserInfoFactory userInfoFactory;
@@ -39,33 +31,39 @@ public class CustomOidcUserService extends OidcUserService {
     public OidcUser loadUser(OidcUserRequest req) throws OAuth2AuthenticationException {
         OidcUser oidcUser = super.loadUser(req);
         AuthProvider authProvider = getAuthProvider(oidcUser.getClaims());
-        CustomOAuthUserInfo userInfo = userInfoFactory.create(authProvider, oidcUser.getAttributes());
+        OAuthUserInfo userInfo = userInfoFactory.create(authProvider, oidcUser.getAttributes());
 
-        saveOrUpdate(userInfo);
+        OAuthUserProfile userProfile = OAuthUserProfile.of(
+                userInfo.getEmail(),
+                userInfo.getName(),
+                userInfo.getPicture(),
+                userInfo.getAuthProvider());
 
-        return new CustomOidcUser(oidcUser, userInfo);
+        syncUser(userProfile);
+
+        return new DomainAwareOidcUser(oidcUser, userInfo);
     }
 
     @Transactional
-    public void saveOrUpdate(CustomOAuthUserInfo userInfo) {
+    public void syncUser(OAuthUserProfile profile) {
 
-        String email = userInfo.getEmail();
+        String email = profile.email();
         if (email == null) {
             throw new OAuth2AuthenticationException("Email not provided by provider");
         }
 
         userRepository.findByEmail(email)
-            .map(user -> user.updateFrom(userInfo))   // 기존 회원 -> 업데이트
-            .orElseGet(() -> createNewUser(userInfo)); // 신규 회원
+            .map(user -> user.updateFrom(profile))
+            .orElseGet(() -> createNewUser(profile));
     }
 
-    private User createNewUser(CustomOAuthUserInfo userInfo) {
+    private User createNewUser(OAuthUserProfile userProfile) {
         return userRepository.save(
                 User.builder()
-                        .email(userInfo.getEmail())
-                        .name(userInfo.getName())
-                        .picture(userInfo.getPicture())
-                        .provider(userInfo.getAuthProvider())
+                        .email(userProfile.email())
+                        .name(userProfile.name())
+                        .picture(userProfile.picture())
+                        .provider(userProfile.provider())
                         .role(Role.USER)
                         .createdAt(LocalDateTime.now())
                         .lastLoginAt(LocalDateTime.now())
