@@ -10,8 +10,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import org.springframework.stereotype.Component
 
-@Component
-open class RssExtractor(
+@Component("rssV2Extractor")
+open class RssV2Extractor(
     private val thumbnailDownloader: ThumbnailDownloader,
 ): RetryableExtractor() {
 
@@ -26,12 +26,14 @@ open class RssExtractor(
         
         return@coroutineScope rss.channel.items?.map { item ->
             async {
+                val description = item.contentEncoded ?: item.description
+                
                 ExtractedMessage(
                     title = item.title,
                     url = item.link,
                     pubDate = item.pubDate,
                     tags = item.categories ?: listOf(),
-                    description = item.description,
+                    description = description,
                     thumbnail = getThumbnail(item.link, extractCommand)
                 )
             }
@@ -42,6 +44,10 @@ open class RssExtractor(
 
         if(command.useDefaultThumbnail) return command.defaultThumbnail
 
-        return thumbnailDownloader.download(url) ?: command.defaultThumbnail
+        return try {
+            thumbnailDownloader.download(url) ?: command.defaultThumbnail
+        } catch (e: Exception) {
+            command.defaultThumbnail
+        }
     }
 }

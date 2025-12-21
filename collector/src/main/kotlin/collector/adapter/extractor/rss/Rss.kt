@@ -8,8 +8,8 @@ import java.time.LocalDateTime
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Rss(
-    val channel: Channel
-,    val version: String,
+    val channel: Channel,
+    val version: String,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -28,7 +28,11 @@ data class Item(
     @JsonDeserialize(using = RssDateDeserializer::class)
     val pubDate: LocalDateTime,
     val description: String?,
+    @JacksonXmlProperty(localName = "encoded", namespace = "http://purl.org/rss/1.0/modules/content/")
+    val contentEncoded: String?,
     val author: String?,
+    @JacksonXmlProperty(localName = "creator", namespace = "http://purl.org/dc/elements/1.1/")
+    val dcCreator: String?,
     @JacksonXmlElementWrapper(useWrapping = false) //<category> 태그 여러개 처리
     @JacksonXmlProperty(localName = "category")
     val categories: List<String>?
