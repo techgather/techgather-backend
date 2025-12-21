@@ -1,14 +1,15 @@
 package authentication.config;
 
 import authentication.oauth.handler.OAuth2LoginFailureHandler;
-import authentication.oauth.service.OidcUserSyncService;
 import authentication.oauth.handler.OAuth2LoginSuccessHandler;
+import authentication.oauth.handler.OAuth2LogoutSuccessHandler;
+import authentication.oauth.service.OidcUserSyncService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -18,26 +19,23 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final OidcUserSyncService customOidcUserService;
     private final OAuth2LoginFailureHandler failureHandler;
+    private final OAuth2LogoutSuccessHandler logoutSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         return http
-                .csrf(csrf -> csrf.disable()) // h2 콘솔 접근 시 CSRF 끄기
-//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .oauth2Login(AbstractHttpConfigurer::disable)
-                .headers(headers -> headers
-                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable) // H2 콘솔은 iframe 사용
-                )
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/auth/",
-                                "/auth/login/**",
-                                "/auth/logout/**")
+                                "/login/**",
+                                "/logout/**",
+                                "/refresh")
                         .permitAll()
-                        .requestMatchers("/h2-console/**").permitAll() // h2 콘솔만 임시
-                        .requestMatchers("/auth/me")
-                            .authenticated()
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/.well-known/jwks.json").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -46,10 +44,8 @@ public class SecurityConfig {
                         .failureHandler(failureHandler)
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/auth/logout")// 향후? 프론트에서 호출할 URL, stateless 시 제거
-                        .clearAuthentication(true)
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
+                        .logoutUrl("/logout")
+                        .logoutSuccessHandler(logoutSuccessHandler)
                         .logoutSuccessUrl("/")
                 )
                 .exceptionHandling(ex -> ex
@@ -59,7 +55,9 @@ public class SecurityConfig {
                             res.getWriter().write("{\"message\": \"Unauthorized\"}");
                         })
                 )
-
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .build();
     }
 }

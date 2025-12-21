@@ -21,4 +21,7 @@ public class TechGatherException extends RuntimeException {
 	}
 
 	//TODO 필요한 예외에 따라 커스터마이징 필요합니다.
+	public static TechGatherException of(TechGatherErrorCode errorCode) {
+		return new TechGatherException(errorCode, null, errorCode.getMessage(), null);
+	}
 }

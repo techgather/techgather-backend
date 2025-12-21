@@ -46,7 +46,6 @@ public class OidcUserSyncService extends OidcUserService {
 
     @Transactional
     public void syncUser(OAuthUserProfile profile) {
-
         String email = profile.email();
         if (email == null) {
             throw new OAuth2AuthenticationException("Email not provided by provider");

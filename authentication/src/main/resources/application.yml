@@ -1,6 +1,8 @@
 server:
   port: 5080
   forward-headers-strategy: framework
+  servlet:
+    context-path: /auth
 
 spring:
   profiles:
@@ -34,12 +36,24 @@ spring:
     import: "aws-parameterstore:/tech-gather/dev/cognito/"
   config.activate.on-profile: dev
 
-  datasource:
-    url: jdbc:mysql://localhost:3306/techgather?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: appuser
-    password: apppass
-    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
 
+aws:
+  secrets:
+    enabled: false
+db:
+  username: appuser
+  password: apppass
+  url: jdbc:mysql://localhost:3306/techgather?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+
+logging:
+  level:
+    org:
+      springframework:
+        security=DEBUG:
 ---
 spring:
   config:

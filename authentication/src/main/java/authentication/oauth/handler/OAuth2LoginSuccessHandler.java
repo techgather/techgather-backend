@@ -1,21 +1,20 @@
 package authentication.oauth.handler;
 
 import authentication.controller.dto.AuthResponse;
+import authentication.controller.dto.UserProfileDto;
+import authentication.oauth.service.TokenService;
 import authentication.oauth.userinfo.OAuthUserInfo;
 import authentication.oauth.userinfo.oidc.DomainAwareOidcUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import domain.entity.User;
+import domain.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +33,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final OAuth2AuthorizedClientService clientService;
     private final ObjectMapper objectMapper;
+    private final UserRepository userRepository;
+    private final TokenService tokenService;
 
     @Override
     public void onAuthenticationSuccess(
@@ -41,41 +42,21 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             HttpServletResponse response,
             Authentication authentication) throws IOException {
 
-        DomainAwareOidcUser oidcUser = extractOidcUser(authentication, response);
-        if (oidcUser == null) return;
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof DomainAwareOidcUser oidcUser)) {
+            return;
+        }
 
         OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
-        establishDomainAuthentication(authentication, oidcUser.getOAuthUserInfo());
 
         OAuth2AuthorizedClient client = loadAuthorizedClient(authToken, response);
         if (client == null) return;
 
-        request.getSession(true)
-                .setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
-
         writeAuthResponse(
                 response,
                 oidcUser.getOAuthUserInfo(),
-                client,
-                oidcUser.getIdToken().getTokenValue()
+                authentication
         );
-    }
-
-    private DomainAwareOidcUser extractOidcUser(Authentication authentication,
-                                                HttpServletResponse response) throws IOException {
-
-        if (!(authentication instanceof OAuth2AuthenticationToken)) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid authentication");
-            return null;
-        }
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof DomainAwareOidcUser oidcUser)) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unsupported principal");
-            return null;
-        }
-
-        return oidcUser;
     }
 
     private OAuth2AuthorizedClient loadAuthorizedClient(
@@ -97,35 +78,24 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         return client;
     }
 
-    private void establishDomainAuthentication(Authentication authentication, OAuthUserInfo domainPrincipal) {
-        Authentication newAuth =
-                new UsernamePasswordAuthenticationToken(
-                        domainPrincipal,
-                        null,
-                        authentication.getAuthorities()
-                );
-
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(newAuth);
-        SecurityContextHolder.setContext(context);
-    }
-
     private void writeAuthResponse(
             HttpServletResponse response,
             OAuthUserInfo userInfo,
-            OAuth2AuthorizedClient client,
-            String idToken
-    ) throws IOException {
+            Authentication authentication) throws IOException {
 
-        OAuth2AccessToken accessToken = client.getAccessToken();
-        OAuth2RefreshToken refreshToken = client.getRefreshToken();
+        DomainAwareOidcUser oidcUser = (DomainAwareOidcUser) authentication.getPrincipal();
+
+        User user = userRepository.findByEmail(oidcUser.getOAuthUserInfo().getEmail())
+                .orElseThrow();
+
+        String accessToken = tokenService.issueAccessToken(user);
+        String refreshToken = tokenService.issueRefreshToken(user);
 
         AuthResponse responseDto = new AuthResponse(
-                userInfo,
-                accessToken.getTokenValue(),
-                accessToken.getExpiresAt(),
-                refreshToken != null ? refreshToken.getTokenValue() : null,
-                idToken
+                user.getId(),
+                UserProfileDto.from(user),
+                accessToken,
+                refreshToken
         );
 
         response.setStatus(HttpServletResponse.SC_OK);
