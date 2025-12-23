@@ -95,7 +95,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 user.getId(),
                 UserProfileDto.from(user),
                 accessToken,
-                refreshToken
+                refreshToken,
+                user.getRole()
         );
 
         response.setStatus(HttpServletResponse.SC_OK);

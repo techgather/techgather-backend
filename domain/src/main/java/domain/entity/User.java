@@ -29,8 +29,8 @@ public class User {
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;
 
-    public User updateFrom(OAuthUserProfile userProfile) {
-        if (userProfile.email() != null && !userProfile.name().equals(this.name)) {
+    public User updateFrom(OAuthUserProfile userProfile, Role role) {
+        if (userProfile.name() != null && !userProfile.name().equals(this.name)) {
             this.name = userProfile.name();
         }
         if (userProfile.picture() != null && !userProfile.picture().equals(this.picture)) {
@@ -39,6 +39,10 @@ public class User {
         if (userProfile.provider() != null && userProfile.provider() != this.provider) {
             this.provider = userProfile.provider();
         }
+        if (role != null && this.role != role) {
+            this.role = role;
+        }
+
         this.lastLoginAt = LocalDateTime.now();
 
         return this;

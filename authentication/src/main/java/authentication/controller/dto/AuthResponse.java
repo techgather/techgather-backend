@@ -1,8 +1,11 @@
 package authentication.controller.dto;
 
+import domain.entity.Role;
+
 public record AuthResponse(
         Long id,
         UserProfileDto userProfile,
         String accessToken,
-        String refreshToken
+        String refreshToken,
+        Role role
 ) {}

@@ -85,7 +85,8 @@ public class TokenService {
                 user.getId(),
                 UserProfileDto.from(user),
                 accessToken,
-                newRefreshToken
+                newRefreshToken,
+                user.getRole()
         );
     }
 }

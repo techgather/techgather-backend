@@ -1,5 +1,6 @@
 package authentication.oauth.service;
 
+import application.exception.TechGatherException;
 import domain.repository.UserRepository;
 import authentication.oauth.userinfo.OAuthUserInfo;
 import authentication.oauth.userinfo.UserInfoFactory;
@@ -20,6 +21,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import static authentication.exception.AuthErrorCode.EMAIL_NOT_PROVIDED;
+
 @Service
 @RequiredArgsConstructor
 public class OidcUserSyncService extends OidcUserService {
@@ -28,6 +31,7 @@ public class OidcUserSyncService extends OidcUserService {
     private final UserInfoFactory userInfoFactory;
 
     @Override
+    @Transactional
     public OidcUser loadUser(OidcUserRequest req) throws OAuth2AuthenticationException {
         OidcUser oidcUser = super.loadUser(req);
         AuthProvider authProvider = getAuthProvider(oidcUser.getClaims());
@@ -38,32 +42,32 @@ public class OidcUserSyncService extends OidcUserService {
                 userInfo.getName(),
                 userInfo.getPicture(),
                 userInfo.getAuthProvider());
+        Role role = extractRoleFromClaims(oidcUser.getClaims());
 
-        syncUser(userProfile);
+        syncUser(userProfile, role);
 
         return new DomainAwareOidcUser(oidcUser, userInfo);
     }
 
-    @Transactional
-    public void syncUser(OAuthUserProfile profile) {
+    public void syncUser(OAuthUserProfile profile, Role role) {
         String email = profile.email();
         if (email == null) {
-            throw new OAuth2AuthenticationException("Email not provided by provider");
+            throw TechGatherException.of(EMAIL_NOT_PROVIDED);
         }
 
         userRepository.findByEmail(email)
-            .map(user -> user.updateFrom(profile))
-            .orElseGet(() -> createNewUser(profile));
+            .map(user -> user.updateFrom(profile, role))
+            .orElseGet(() -> createNewUser(profile, role));
     }
 
-    private User createNewUser(OAuthUserProfile userProfile) {
+    private User createNewUser(OAuthUserProfile userProfile, Role role) {
         return userRepository.save(
                 User.builder()
                         .email(userProfile.email())
                         .name(userProfile.name())
                         .picture(userProfile.picture())
                         .provider(userProfile.provider())
-                        .role(Role.USER)
+                        .role(role)
                         .createdAt(LocalDateTime.now())
                         .lastLoginAt(LocalDateTime.now())
                         .build()
@@ -88,5 +92,20 @@ public class OidcUserSyncService extends OidcUserService {
         }
 
         return AuthProvider.from(providerName);
+    }
+
+    private Role extractRoleFromClaims(Map<String, Object> claims) {
+        Object groupsObj = claims.get("cognito:groups");
+
+        if (groupsObj instanceof List<?> groups) {
+            boolean isAdmin = groups.stream()
+                    .anyMatch(g -> "ADMIN".equalsIgnoreCase(String.valueOf(g)));
+
+            if (isAdmin) {
+                return Role.ADMIN;
+            }
+        }
+
+        return Role.USER;
     }
 }
