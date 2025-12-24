@@ -4,17 +4,19 @@ package authentication.controller.dto;
 import domain.entity.AuthProvider;
 import domain.entity.Role;
 import domain.entity.User;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-public record UserProfileDto(
-        Long id,
-        String email,
-        String name,
+public record UserProfile(
+        @NotNull Long id,
+        @NotBlank String email,
+        @NotBlank String name,
         String picture,
-        AuthProvider provider,
-        Role role
+        @NotNull AuthProvider provider,
+        @NotNull Role role
 ) {
-    public static UserProfileDto from(User user) {
-        return new UserProfileDto(
+    public static UserProfile from(User user) {
+        return new UserProfile(
                 user.getId(),
                 user.getEmail(),
                 user.getName(),

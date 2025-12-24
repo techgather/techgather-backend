@@ -1,5 +1,6 @@
 package domain.entity;
 
+import domain.common.BaseTime;
 import domain.vo.OAuthUserProfile;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,12 +13,14 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User extends BaseTime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique=true, nullable=false) private String email;
+    @Column(unique=true, nullable=false)
+    private String email;
+
     private String name;
     private String picture;
 
@@ -26,8 +29,9 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
-    private LocalDateTime createdAt;
 
     public User updateFrom(OAuthUserProfile userProfile, Role role) {
         if (userProfile.name() != null && !userProfile.name().equals(this.name)) {

@@ -1,6 +1,7 @@
 package authentication.oauth.service;
 
 import application.exception.TechGatherException;
+import authentication.exception.AuthErrorCode;
 import domain.repository.UserRepository;
 import authentication.oauth.userinfo.OAuthUserInfo;
 import authentication.oauth.userinfo.UserInfoFactory;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import static authentication.exception.AuthErrorCode.*;
 import static authentication.exception.AuthErrorCode.EMAIL_NOT_PROVIDED;
 
 @Service
@@ -68,7 +70,6 @@ public class OidcUserSyncService extends OidcUserService {
                         .picture(userProfile.picture())
                         .provider(userProfile.provider())
                         .role(role)
-                        .createdAt(LocalDateTime.now())
                         .lastLoginAt(LocalDateTime.now())
                         .build()
         );
@@ -77,21 +78,20 @@ public class OidcUserSyncService extends OidcUserService {
     private AuthProvider getAuthProvider(Map<String, Object> claims) {
         Object identitiesObj = claims.get("identities");
 
-        // identities가 비었다면, cognito 직접 로그인
         if (!(identitiesObj instanceof List<?> list) || list.isEmpty()) {
-            return AuthProvider.COGNITO;
+            throw TechGatherException.of(AuthErrorCode.OIDC_IDENTITIES_NOT_PRESENT);
         }
 
-        // identity와 providerName 타입 체크
         Object first = list.get(0);
         if (!(first instanceof Map<?, ?> identity)){
-            return AuthProvider.UNKNOWN;
+            throw TechGatherException.of(OIDC_INVALID_IDENTITY_FORMAT);
         }
         if (!(identity.get("providerName") instanceof String providerName)) {
-            return AuthProvider.UNKNOWN;
+            throw TechGatherException.of(OIDC_PROVIDER_NAME_INVALID);
         }
 
-        return AuthProvider.from(providerName);
+        return AuthProvider.from(providerName)
+                .orElseThrow(() -> TechGatherException.of(AUTH_UNSUPPORTED_PROVIDER));
     }
 
     private Role extractRoleFromClaims(Map<String, Object> claims) {

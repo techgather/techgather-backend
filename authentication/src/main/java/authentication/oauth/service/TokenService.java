@@ -1,8 +1,7 @@
 package authentication.oauth.service;
 
 import application.exception.TechGatherException;
-import authentication.controller.dto.AuthResponse;
-import authentication.controller.dto.UserProfileDto;
+import authentication.controller.dto.AuthTokenResponse;
 import authentication.infra.JwtKeyProvider;
 import domain.entity.RefreshToken;
 import domain.entity.User;
@@ -18,7 +17,8 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
-import static authentication.exception.AuthErrorCode.*;
+import static authentication.exception.AuthErrorCode.REFRESH_TOKEN_EXPIRED;
+import static authentication.exception.AuthErrorCode.REFRESH_TOKEN_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -66,7 +66,7 @@ public class TokenService {
     }
 
     @Transactional
-    public AuthResponse refresh(String refreshTokenValue) {
+    public AuthTokenResponse refresh(String refreshTokenValue) {
 
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
                 .orElseThrow(() -> TechGatherException.of(REFRESH_TOKEN_NOT_FOUND));
@@ -79,14 +79,8 @@ public class TokenService {
 
         String accessToken = issueAccessToken(user);
         String newRefreshToken = UUID.randomUUID().toString();
-        refreshToken.rotate(newRefreshToken);
+        refreshToken.rotate(newRefreshToken, REFRESH_TOKEN_EXPIRE_DAYS);
 
-        return new AuthResponse(
-                user.getId(),
-                UserProfileDto.from(user),
-                accessToken,
-                newRefreshToken,
-                user.getRole()
-        );
+        return AuthTokenResponse.from(user, accessToken, newRefreshToken);
     }
 }

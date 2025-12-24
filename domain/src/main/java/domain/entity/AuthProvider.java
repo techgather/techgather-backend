@@ -1,14 +1,14 @@
 package domain.entity;
 
-public enum AuthProvider {
-    COGNITO,
-    GOOGLE,
-    UNKNOWN;
+import java.util.Arrays;
+import java.util.Optional;
 
-    public static AuthProvider from(String name) {
-        for (AuthProvider p : values()) {
-            if (p.name().equalsIgnoreCase(name)) return p;
-        }
-        return UNKNOWN;
+public enum AuthProvider {
+    GOOGLE;
+
+    public static Optional<AuthProvider> from(String name) {
+        return Arrays.stream(values())
+                .filter(p -> p.name().equalsIgnoreCase(name))
+                .findFirst();
     }
 }

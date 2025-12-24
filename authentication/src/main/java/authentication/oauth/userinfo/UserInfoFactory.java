@@ -1,11 +1,15 @@
 package authentication.oauth.userinfo;
 
+import application.exception.TechGatherException;
+import authentication.exception.AuthErrorCode;
 import domain.entity.AuthProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+
+import static authentication.exception.AuthErrorCode.*;
 
 /**
  * OAuth Provider별 사용자 정보 생성을 담당하는 Factory
@@ -22,7 +26,7 @@ public class UserInfoFactory {
         return creators.stream()
                 .filter(c -> c.supports(provider))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unsupported provider: " + provider))
+                .orElseThrow(() -> TechGatherException.of(AUTH_UNSUPPORTED_PROVIDER))
                 .create(attributes);
     }
 }

@@ -2,7 +2,7 @@ package authentication.controller;
 
 import application.exception.TechGatherException;
 import authentication.config.CognitoProperties;
-import authentication.controller.dto.AuthResponse;
+import authentication.controller.dto.AuthTokenResponse;
 import authentication.controller.dto.RefreshRequest;
 import authentication.infra.JwtKeyProvider;
 import authentication.oauth.service.TokenService;
@@ -69,7 +69,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public AuthResponse refresh(@RequestBody RefreshRequest req) throws TechGatherException {
+    public AuthTokenResponse refresh(@RequestBody RefreshRequest req) throws TechGatherException {
         return tokenService.refresh(req.refreshToken());
     }
 }

@@ -1,5 +1,7 @@
 package authentication.controller.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record RefreshRequest(
-        String refreshToken
+        @NotBlank String refreshToken
 ) {}
