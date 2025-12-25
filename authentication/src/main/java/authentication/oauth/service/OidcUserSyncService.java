@@ -2,13 +2,13 @@ package authentication.oauth.service;
 
 import application.exception.TechGatherException;
 import authentication.exception.AuthErrorCode;
-import domain.repository.UserRepository;
 import authentication.oauth.userinfo.OAuthUserInfo;
 import authentication.oauth.userinfo.UserInfoFactory;
 import authentication.oauth.userinfo.oidc.DomainAwareOidcUser;
 import domain.entity.AuthProvider;
 import domain.entity.Role;
 import domain.entity.User;
+import domain.repository.UserRepository;
 import domain.vo.OAuthUserProfile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -18,12 +18,10 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 import static authentication.exception.AuthErrorCode.*;
-import static authentication.exception.AuthErrorCode.EMAIL_NOT_PROVIDED;
 
 @Service
 @RequiredArgsConstructor
@@ -64,14 +62,7 @@ public class OidcUserSyncService extends OidcUserService {
 
     private User createNewUser(OAuthUserProfile userProfile, Role role) {
         return userRepository.save(
-                User.builder()
-                        .email(userProfile.email())
-                        .name(userProfile.name())
-                        .picture(userProfile.picture())
-                        .provider(userProfile.provider())
-                        .role(role)
-                        .lastLoginAt(LocalDateTime.now())
-                        .build()
+                User.from(userProfile, role)
         );
     }
 

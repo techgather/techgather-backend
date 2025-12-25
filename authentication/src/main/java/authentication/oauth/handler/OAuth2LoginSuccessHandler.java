@@ -1,22 +1,21 @@
 package authentication.oauth.handler;
 
 import application.exception.TechGatherException;
-import authentication.controller.dto.AuthTokenResponse;
 import authentication.oauth.service.OAuth2LoginSuccessService;
-import authentication.oauth.service.TokenService;
 import authentication.oauth.userinfo.oidc.DomainAwareOidcUser;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import domain.entity.User;
-import domain.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 import static authentication.exception.AuthErrorCode.AUTH_INTERNAL_ERROR;
 
@@ -28,6 +27,10 @@ import static authentication.exception.AuthErrorCode.AUTH_INTERNAL_ERROR;
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final OAuth2LoginSuccessService oAuth2LoginSuccessService;
+    private final OAuth2AuthorizedClientService authorizedClientService;
+
+    private final int COGNITO_REFRESH_TOKEN_EXPIRATION = 30;
+
     @Override
     public void onAuthenticationSuccess(
             HttpServletRequest request,
@@ -38,10 +41,25 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             throw TechGatherException.of(AUTH_INTERNAL_ERROR);
         }
 
+        String registrationId = authToken.getAuthorizedClientRegistrationId();
+        OAuth2AuthorizedClient client =
+                authorizedClientService.loadAuthorizedClient(
+                        registrationId,
+                        authentication.getName()
+                );
+        OAuth2RefreshToken providerRefreshToken = client.getRefreshToken();
+
+        String oidcRefreshToken = providerRefreshToken.getTokenValue();
+
         if (!(authToken.getPrincipal() instanceof DomainAwareOidcUser oidcUser)) {
             throw TechGatherException.of(AUTH_INTERNAL_ERROR);
         }
 
-        oAuth2LoginSuccessService.handleLoginSuccess(response, oidcUser);
+        oAuth2LoginSuccessService.handleLoginSuccess(
+                response,
+                oidcUser,
+                oidcRefreshToken,
+                LocalDateTime.now().plusDays(COGNITO_REFRESH_TOKEN_EXPIRATION)
+                );
     }
 }

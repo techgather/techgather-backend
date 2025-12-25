@@ -18,19 +18,9 @@ public enum AuthErrorCode implements TechGatherErrorCode {
             "이메일 정보가 제공되지 않았습니다.",
             HttpStatus.BAD_REQUEST
     ),
-    REFRESH_TOKEN_NOT_FOUND(
-            "REFRESH_TOKEN_NOT_FOUND",
-            "",
-            HttpStatus.UNAUTHORIZED
-    ),
-    REFRESH_TOKEN_EXPIRED(
-            "REFRESH_TOKEN_EXPIRED",
+    REFRESH_TOKEN_INVALID(
+            "REFRESH_TOKEN_INVALID",
             "유효한 리프레시 토큰이 존재하지 않습니다.",
-            HttpStatus.UNAUTHORIZED
-    ),
-    REFRESH_TOKEN_REVOKED(
-            "REFRESH_TOKEN_REVOKED",
-            "리프레시 토큰이 만료되었습니다.",
             HttpStatus.UNAUTHORIZED
     ),
     LOCAL_JWT_KEY_GENERATION_FAILED(

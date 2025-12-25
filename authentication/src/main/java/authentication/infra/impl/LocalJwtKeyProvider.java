@@ -2,6 +2,7 @@ package authentication.infra.impl;
 
 import application.exception.TechGatherException;
 import authentication.infra.JwtKeyProvider;
+import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +19,8 @@ public class LocalJwtKeyProvider implements JwtKeyProvider {
     private PrivateKey privateKey;
     private PublicKey publicKey;
 
-    public LocalJwtKeyProvider() {
+    @PostConstruct
+    public void init() {
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             keyGen.initialize(2048);

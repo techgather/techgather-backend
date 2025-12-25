@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name="users")
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseTime {
     @Id
@@ -32,6 +30,17 @@ public class User extends BaseTime {
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
+
+    public static User from(OAuthUserProfile userProfile, Role role) {
+        User user = new User();
+        user.role = role;
+        user.email = userProfile.email();
+        user.provider = userProfile.provider();
+        user.name = userProfile.name();
+        user.picture = userProfile.picture();
+        user.lastLoginAt = LocalDateTime.now();
+        return user;
+    }
 
     public User updateFrom(OAuthUserProfile userProfile, Role role) {
         if (userProfile.name() != null && !userProfile.name().equals(this.name)) {

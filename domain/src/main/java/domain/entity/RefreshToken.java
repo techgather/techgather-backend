@@ -1,17 +1,16 @@
 package domain.entity;
 
-import domain.common.BaseTime;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 @Entity
 @Table(name = "refresh_tokens")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
 public class RefreshToken {
 
     @Id
@@ -21,8 +20,8 @@ public class RefreshToken {
     @Column(name = "refresh_token", unique = true, nullable = false)
     private String token;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", unique = true, nullable = false)
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(name = "expires_at", nullable = false)
@@ -41,4 +40,25 @@ public class RefreshToken {
         this.token = newToken;
         this.expiresAt = LocalDateTime.now().plusDays(refreshTokenExpireDays);
     }
+
+    public static RefreshToken from(String token, User user, LocalDateTime expiresAt) {
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken(token);
+        refreshToken.setUser(user);
+        refreshToken.setExpiresAt(expiresAt);
+        return refreshToken;
+    }
+
+    private void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    private void setUser(User user) {
+        this.user = user;
+    }
+
+    private void setToken(String token) {
+        this.token = token;
+    }
+
 }
