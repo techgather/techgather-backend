@@ -23,8 +23,7 @@ public class Post {
 
 	private String title;
 
-	@Lob
-	@Column(columnDefinition = "TEXT", unique = true)
+	@Column(length = 768, unique = true)
 	private String url;
 
 	@Column(name = "pub_date")
@@ -32,11 +31,18 @@ public class Post {
 
 	@Lob
 	@Column(columnDefinition = "TEXT")
-	private String description;
-
-	@Lob
-	@Column(columnDefinition = "TEXT")
 	private String thumbnail;
+
+	@Column(name = "sourceSiteName")
+	private String sourceSiteName;
+
+	@Column(name = "language")
+	@Enumerated(EnumType.STRING)
+	private Language language;
+
+	@Column(name = "status")
+	@Enumerated(EnumType.STRING)
+	private Status status;
 
 	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private Set<PostTag> postTags = new HashSet<>();
@@ -45,15 +51,18 @@ public class Post {
 							  String title,
 							  String url,
 							  LocalDateTime pubDate,
-							  String description,
-							  String thumbnail) {
+							  String thumbnail,
+							  String sourceSiteName,
+							  String language) {
 		Post post = new Post();
 		post.postId = postId;
 		post.title = title;
 		post.url = url;
 		post.pubDate = pubDate;
-		post.description = description;
 		post.thumbnail = thumbnail;
+		post.sourceSiteName = sourceSiteName;
+		post.language = Language.fromCode(language);
+		post.status = Status.NOT_PUBLISHED;
 		return post;
 	}
 
