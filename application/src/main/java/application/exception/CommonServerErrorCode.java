@@ -8,25 +8,24 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum CommonServerErrorCode implements TechGatherErrorCode {
 
-	VALID_EXCEPTION("VALID_EXCEPTION", "", HttpStatus.BAD_REQUEST);
+    NOT_FOUND_PROPERTY("NOT_FOUND_PROPERTY", "", HttpStatus.INTERNAL_SERVER_ERROR);
 
+    private final String code;
+    private final String message;
+    private final HttpStatus httpStatus;
 
-	private final String code;
-	private final String message;
-	private final HttpStatus httpStatus;
+    @Override
+    public String getCode() {
+        return code;
+    }
 
-	@Override
-	public String getCode() {
-		return code;
-	}
+    @Override
+    public String getMessage() {
+        return message;
+    }
 
-	@Override
-	public String getMessage() {
-		return message;
-	}
-
-	@Override
-	public HttpStatus getHttpStatus() {
-		return httpStatus;
-	}
+    @Override
+    public HttpStatus getHttpStatus() {
+        return httpStatus;
+    }
 }
