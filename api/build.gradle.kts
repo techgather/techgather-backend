@@ -1,24 +1,30 @@
 plugins {
-	kotlin("jvm")
-	kotlin("plugin.spring")
+	alias(libs.plugins.kotlin.jvm)
+	alias(libs.plugins.kotlin.spring)
 }
 
 dependencies {
 	implementation(project(":domain"))
     implementation(project(":application"))
 
-	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation(libs.spring.boot.starter.web)
+	implementation(libs.spring.boot.starter.data.jpa)
+	implementation(libs.spring.boot.starter.validation)
 
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    testImplementation("org.springframework.security:spring-security-test")
+	implementation(libs.springdoc.openapi.starter.webmvc.ui)
+    implementation(libs.spring.boot.starter.security)
+    testImplementation(libs.spring.security.test)
 
-    runtimeOnly("com.mysql:mysql-connector-j")
+    runtimeOnly(libs.mysql.connector.j)
 
-    compileOnly ("org.projectlombok:lombok")
-    annotationProcessor ("org.projectlombok:lombok")
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+}
+
+kotlin {
+	compilerOptions {
+		freeCompilerArgs.addAll("-Xjsr305=strict")
+	}
 }
 
 tasks.bootJar {
