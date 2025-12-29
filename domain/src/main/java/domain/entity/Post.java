@@ -1,5 +1,7 @@
 package domain.entity;
 
+import domain.constants.Language;
+import domain.constants.Status;
 import jakarta.persistence.*;
 import lombok.*;
 
