@@ -1,4 +1,4 @@
-package domain.entity;
+package domain.constants;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

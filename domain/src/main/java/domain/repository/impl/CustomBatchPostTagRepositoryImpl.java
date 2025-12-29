@@ -2,7 +2,7 @@ package domain.repository.impl;
 
 import application.generator.SnowFlake;
 import domain.repository.CustomBatchPostTagRepository;
-import domain.vo.PostTag;
+import domain.vo.PostTagPair;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -36,33 +36,33 @@ public class CustomBatchPostTagRepositoryImpl implements CustomBatchPostTagRepos
 			return;
 		}
 
-		List<PostTag> pairs = createPostTagList(urls, tagNames);
-		List<PostTag> sanitizePairs = pairs.stream()
+		List<PostTagPair> pairs = createPostTagList(urls, tagNames);
+		List<PostTagPair> sanitizePairs = pairs.stream()
 			    .distinct()
 				.toList();
 		saveBatch(sanitizePairs);
 	}
 
-	private List<PostTag> createPostTagList(List<String> urls, List<String> tagNames) {
-		List<PostTag> postTags = new ArrayList<>(urls.size());
+	private List<PostTagPair> createPostTagList(List<String> urls, List<String> tagNames) {
+		List<PostTagPair> postTagPairs = new ArrayList<>(urls.size());
 		for (int i = 0; i < urls.size(); i++) {
-			postTags.add(PostTag.of(urls.get(i), tagNames.get(i)));
+			postTagPairs.add(PostTagPair.of(urls.get(i), tagNames.get(i)));
 		}
-		return postTags;
+		return postTagPairs;
 	}
 
-	private void saveBatch(List<PostTag> pairs) {
+	private void saveBatch(List<PostTagPair> pairs) {
 		for (int i = 0; i < pairs.size(); i += BATCH_SIZE) {
 			int endIndex = Math.min(i + BATCH_SIZE, pairs.size());
-			List<PostTag> batch = pairs.subList(i, endIndex);
+			List<PostTagPair> batch = pairs.subList(i, endIndex);
 
 			SqlParameterSource[] batchArgs = new SqlParameterSource[batch.size()];
 			for (int j = 0; j < batch.size(); j++) {
-				PostTag postTag = batch.get(j);
+				PostTagPair postTagPair = batch.get(j);
 				MapSqlParameterSource params = new MapSqlParameterSource();
 				params.addValue("id", snowflake.nextId());
-				params.addValue("url", postTag.url());
-				params.addValue("tagName", postTag.tagName());
+				params.addValue("url", postTagPair.url());
+				params.addValue("tagName", postTagPair.tagName());
 				batchArgs[j] = params;
 			}
 

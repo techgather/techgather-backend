@@ -1,6 +1,7 @@
 package api.controller.dto.response
 
 import api.service.dto.result.PostResult
+import domain.constants.Language
 import java.time.LocalDateTime
 
 data class PostResponse(
@@ -9,7 +10,9 @@ data class PostResponse(
     val pubDate: LocalDateTime,
     val thumbnail: String,
     val url: String,
-    val tags: List<String>
+    val tags: List<String>,
+    val sourceSiteName: String,
+    val language: Language
 ) {
 
     companion object {
@@ -20,7 +23,9 @@ data class PostResponse(
                 pubDate = result.pubDate,
                 thumbnail = result.thumbnail,
                 url = result.url,
-                tags = result.tags
+                tags = result.tags,
+                sourceSiteName = result.sourceSiteName,
+                language = result.language
             )
         }
     }

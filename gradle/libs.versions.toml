@@ -9,7 +9,8 @@ springdoc-openapi = "2.8.14"
 ktor = "3.3.0"
 jsoup = "1.17.2"
 okhttp = "4.12.0"
-spring-cloud-aws = "3.0.3"
+spring-cloud-aws = "3.4.2"
+aws-sdk = "2.40.16"
 lombok = "1.18.32"
 jackson = "2.18.2"
 querydsl = "5.0.0"
@@ -56,6 +57,7 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 
 # AWS
 spring-cloud-aws-starter-parameter-store = { module = "io.awspring.cloud:spring-cloud-aws-starter-parameter-store", version.ref = "spring-cloud-aws" }
+aws-secretsmanager = { module = "software.amazon.awssdk:secretsmanager", version.ref = "aws-sdk" }
 
 # Database
 mysql-connector-j = { module = "com.mysql:mysql-connector-j" }
