@@ -1,6 +1,6 @@
 package api.exception
 
-import application.exception.CommonServerErrorCode
+import application.exception.CommonClientErrorCode
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -14,7 +14,7 @@ class GlobalExceptionHandler {
         val errorMessage = e.bindingResult.fieldErrors
             .mapNotNull { it.defaultMessage }
             .joinToString(", ")
-        val errorCode = CommonServerErrorCode.VALID_EXCEPTION
+        val errorCode = CommonClientErrorCode.VALID_EXCEPTION
         val response = ApiErrorResponse.of(errorCode.code, errorMessage, errorCode.httpStatus)
         return ResponseEntity.status(errorCode.httpStatus).body(response)
     }
