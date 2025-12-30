@@ -1,6 +1,6 @@
 plugins {
-	alias(libs.plugins.kotlin.jvm)
-	alias(libs.plugins.kotlin.spring)
+	kotlin("jvm")
+	kotlin("plugin.spring")
 }
 
 dependencies {
@@ -15,16 +15,13 @@ dependencies {
     implementation(libs.spring.boot.starter.security)
     testImplementation(libs.spring.security.test)
 
+	implementation(libs.spring.cloud.aws.starter.parameter.store)
+	implementation(libs.aws.secretsmanager)
+
     runtimeOnly(libs.mysql.connector.j)
 
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
-}
-
-kotlin {
-	compilerOptions {
-		freeCompilerArgs.addAll("-Xjsr305=strict")
-	}
 }
 
 tasks.bootJar {

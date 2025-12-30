@@ -45,6 +45,12 @@ allprojects {
 			jvmToolchain(17)
 		}
 	}
+
+	pluginManager.withPlugin('org.jetbrains.kotlin.jvm') {
+		kotlin {
+			jvmToolchain(17)
+		}
+	}
 }
 
 bootJar {
