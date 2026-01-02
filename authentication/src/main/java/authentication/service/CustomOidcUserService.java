@@ -8,9 +8,11 @@ import authentication.userinfo.CustomOAuthUserInfo;
 import authentication.userinfo.UserInfoFactory;
 import authentication.userinfo.oidc.CustomOidcUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ import java.util.Map;
  * - CustomOidcUser를 반환하여 인증 Principal로 사용
  *  즉, SecurityContext에는 기본 OidcUser가 아닌 OAuthUserInfo가 포함된 CustomOidcUser가 저장
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CustomOidcUserService extends OidcUserService {
@@ -38,12 +41,35 @@ public class CustomOidcUserService extends OidcUserService {
     @Override
     public OidcUser loadUser(OidcUserRequest req) throws OAuth2AuthenticationException {
         OidcUser oidcUser = super.loadUser(req);
+
+        String registrationId = req.getClientRegistration().getRegistrationId();
         AuthProvider authProvider = getAuthProvider(oidcUser.getClaims());
-        CustomOAuthUserInfo userInfo = userInfoFactory.create(authProvider, oidcUser.getAttributes());
 
-        saveOrUpdate(userInfo);
+        CustomOAuthUserInfo userInfo =
+                userInfoFactory.create(authProvider, oidcUser.getAttributes());
 
-        return new CustomOidcUser(oidcUser, userInfo);
+        Role role;
+
+        if ("cognito".equals(registrationId)) {
+            // USER
+            role = Role.USER;
+            saveOrUpdate(userInfo);
+
+        } else if ("cognito-admin".equals(registrationId)) {
+            // ADMIN
+            validateAdminGroup(oidcUser);
+            role = Role.ADMIN;
+        } else {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error(
+                            "not_admin",
+                            "User is not in ADMIN group",
+                            null
+                    )
+            );
+        }
+
+        return new CustomOidcUser(oidcUser, userInfo, role);
     }
 
     @Transactional
@@ -71,6 +97,33 @@ public class CustomOidcUserService extends OidcUserService {
                         .lastLoginAt(LocalDateTime.now())
                         .build()
         );
+    }
+
+    private void validateAdminGroup(OidcUser oidcUser) {
+        List<String> groups =
+                oidcUser.getClaimAsStringList("cognito:groups");
+
+        // 그룹 클레임 자체가 없는 경우
+        if (groups == null) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error(
+                            "no_groups",
+                            "User does not belong to any group",
+                            null
+                    )
+            );
+        }
+
+        // 그룹은 있지만 ADMIN이 아닌 경우
+        if (!groups.contains("ADMIN")) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error(
+                            "not_admin",
+                            "User is not in ADMIN group",
+                            null
+                    )
+            );
+        }
     }
 
     private AuthProvider getAuthProvider(Map<String, Object> claims) {

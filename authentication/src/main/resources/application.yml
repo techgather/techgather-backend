@@ -19,19 +19,41 @@ spring:
   security:
     oauth2:
       client:
+        provider:
+          cognito:
+            issuer-uri: ${spring.security.oauth2.client.provider.cognito.issuer-uri}
         registration:
           cognito:
+            provider: cognito
+            client-id: ${COGNITO_USER_CLIENT_ID}
+            client-secret: ${COGNITO_USER_CLIENT_SECRET}
             authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "{baseUrl}/login/oauth2/code/cognito"
             scope:
               - openid
               - email
               - profile
 
+          cognito-admin:
+            provider: cognito
+            client-id: ${COGNITO_USER_CLIENT_ID}
+            client-secret: ${COGNITO_USER_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/cognito-admin"
+            scope:
+              - openid
+              - email
+              - profile
+
+logging:
+  level:
+    org.springframework.transaction: TRACE
+    org.springframework.orm.jpa: DEBUG
+
 ---
 spring:
   config:
-    import: "aws-parameterstore:/tech-gather/dev/cognito/"
+    import: "aws-parameterstore:/tech-gather/local/"
   config.activate.on-profile: dev
 
   datasource:
@@ -43,6 +65,6 @@ spring:
 ---
 spring:
   config:
-    import: "aws-parameterstore:/tech-gather/prod/cognito/"
+    import: "aws-parameterstore:/tech-gather/prod/"
   config.activate.on-profile: prod
 

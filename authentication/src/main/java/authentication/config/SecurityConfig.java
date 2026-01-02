@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -24,20 +25,19 @@ public class SecurityConfig {
 
         return http
                 .csrf(csrf -> csrf.disable()) // h2 콘솔 접근 시 CSRF 끄기
-//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .oauth2Login(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable) // H2 콘솔은 iframe 사용
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/oauth2/**",
+                                "/login/**",
                                 "/auth/",
                                 "/auth/login/**",
                                 "/auth/logout/**")
                         .permitAll()
                         .requestMatchers("/h2-console/**").permitAll() // h2 콘솔만 임시
-                        .requestMatchers("/auth/me")
-                            .authenticated()
+                        .requestMatchers("/auth/me").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -59,7 +59,6 @@ public class SecurityConfig {
                             res.getWriter().write("{\"message\": \"Unauthorized\"}");
                         })
                 )
-
                 .build();
     }
 }
