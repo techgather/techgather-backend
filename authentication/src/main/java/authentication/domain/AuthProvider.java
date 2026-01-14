@@ -1,8 +1,5 @@
 package authentication.domain;
 
-/**
- * 인증을 수행한 인증 제공자
- */
 public enum AuthProvider {
     COGNITO,
     GOOGLE,

@@ -1,6 +1,7 @@
 package authentication.userinfo.oidc;
 
 
+import authentication.domain.Role;
 import authentication.userinfo.CustomOAuthUserInfo;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -21,10 +22,12 @@ import java.util.Map;
 public class CustomOidcUser implements OidcUser {
     private final OidcUser delegate;        // 원본 객체
     private final CustomOAuthUserInfo userInfo;   // sucessHandler에서도 사용할 추가 정보
+    private final Role role;
 
-    public CustomOidcUser(OidcUser delegate, CustomOAuthUserInfo userInfo) {
+    public CustomOidcUser(OidcUser delegate, CustomOAuthUserInfo userInfo, Role role) {
         this.delegate = delegate;
         this.userInfo = userInfo;
+        this.role = role;
     }
 
     public CustomOAuthUserInfo getOAuthUserInfo() {

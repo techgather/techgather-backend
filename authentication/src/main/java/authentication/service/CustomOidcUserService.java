@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,15 +20,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-/**
- * OIDC 로그인 후 사용자 정보를 처리하는 Service
- *
- * - Provider(Cognito, Google 등)로부터 사용자 정보 조회
- * - Provider attributes → OAuthUserInfo 공통 모델로 변환
- * - DB에 회원 정보 신규 저장 또는 업데이트 (프로필 & 마지막 로그인 시간)
- * - CustomOidcUser를 반환하여 인증 Principal로 사용
- *  즉, SecurityContext에는 기본 OidcUser가 아닌 OAuthUserInfo가 포함된 CustomOidcUser가 저장
- */
 @Service
 @RequiredArgsConstructor
 public class CustomOidcUserService extends OidcUserService {
@@ -35,15 +27,47 @@ public class CustomOidcUserService extends OidcUserService {
     private final UserRepository userRepository;
     private final UserInfoFactory userInfoFactory;
 
+    private interface RegistrationStrategy {
+        Role apply(OidcUser oidcUser, CustomOAuthUserInfo userInfo);
+    }
+
+    private final Map<String, RegistrationStrategy> registrationStrategies = Map.of(
+            OAuthClientRegistration.COGNITO,
+            (oidcUser, userInfo) -> {
+                saveOrUpdate(userInfo);
+                return Role.USER;
+            },
+            OAuthClientRegistration.COGNITO_ADMIN,
+            (oidcUser, userInfo) -> {
+                validateAdminGroup(oidcUser);
+                return Role.ADMIN;
+            }
+    );
+
     @Override
     public OidcUser loadUser(OidcUserRequest req) throws OAuth2AuthenticationException {
         OidcUser oidcUser = super.loadUser(req);
+
+        String registrationId = req.getClientRegistration().getRegistrationId();
         AuthProvider authProvider = getAuthProvider(oidcUser.getClaims());
-        CustomOAuthUserInfo userInfo = userInfoFactory.create(authProvider, oidcUser.getAttributes());
 
-        saveOrUpdate(userInfo);
+        CustomOAuthUserInfo userInfo =
+                userInfoFactory.create(authProvider, oidcUser.getAttributes());
 
-        return new CustomOidcUser(oidcUser, userInfo);
+        RegistrationStrategy strategy = registrationStrategies.get(registrationId);
+        if (strategy == null) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error(
+                            "not_admin",
+                            "User is not in ADMIN group",
+                            null
+                    )
+            );
+        }
+
+        Role role = strategy.apply(oidcUser, userInfo);
+
+        return new CustomOidcUser(oidcUser, userInfo, role);
     }
 
     @Transactional
@@ -55,7 +79,7 @@ public class CustomOidcUserService extends OidcUserService {
         }
 
         userRepository.findByEmail(email)
-            .map(user -> user.updateFrom(userInfo))   // 기존 회원 -> 업데이트
+            .map(user -> user.updateFrom(userInfo)) // 기존 회원 -> 업데이트
             .orElseGet(() -> createNewUser(userInfo)); // 신규 회원
     }
 
@@ -71,6 +95,33 @@ public class CustomOidcUserService extends OidcUserService {
                         .lastLoginAt(LocalDateTime.now())
                         .build()
         );
+    }
+
+    private void validateAdminGroup(OidcUser oidcUser) {
+        List<String> groups =
+                oidcUser.getClaimAsStringList("cognito:groups");
+
+        // 그룹 클레임 자체가 없는 경우
+        if (groups == null) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error(
+                            "no_groups",
+                            "User does not belong to any group",
+                            null
+                    )
+            );
+        }
+
+        // 그룹은 있지만 ADMIN이 아닌 경우
+        if (!groups.contains("ADMIN")) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error(
+                            "not_admin",
+                            "User is not in ADMIN group",
+                            null
+                    )
+            );
+        }
     }
 
     private AuthProvider getAuthProvider(Map<String, Object> claims) {
