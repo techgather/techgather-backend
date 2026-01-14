@@ -3,6 +3,7 @@ package api.service
 import api.controller.dto.request.PostSearchCondition
 import api.service.dto.result.PostResults
 import domain.constants.Language
+import domain.constants.Status
 import domain.repository.PostRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -29,5 +30,14 @@ class PostService(
 
         return PostResults.of(posts, limit)
     }
+
+    @Transactional
+    fun markedPostStatus(
+        postIds: List<Long>
+    ) {
+        val postIds = postRepository.findPostByPostIdIn(postIds)
+        postRepository.updateStatusByPostId(postIds, Status.DISCARDED)
+    }
+
 }
 

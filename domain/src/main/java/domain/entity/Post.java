@@ -1,5 +1,6 @@
 package domain.entity;
 
+import domain.common.BaseTime;
 import domain.constants.Language;
 import domain.constants.Status;
 import jakarta.persistence.*;
@@ -17,8 +18,7 @@ import java.util.Set;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EqualsAndHashCode(of = "url")
-public class Post {
+public class Post extends BaseTime {
 
 	@Id
 	private Long postId;
