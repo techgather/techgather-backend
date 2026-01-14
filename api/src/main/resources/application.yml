@@ -33,3 +33,64 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
+
+---
+
+spring:
+  profiles:
+    active: dev
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/techgather
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: techgather
+    password: techgather
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+
+---
+
+spring:
+  profiles:
+    active: prod
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+
+aws:
+  secret-name: prod/db/parameter

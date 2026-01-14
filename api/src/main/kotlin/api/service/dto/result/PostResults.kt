@@ -8,17 +8,12 @@ data class PostResults(
     val nextPostId: Long?
 ) {
     companion object {
-        fun from(posts: List<Post>): PostResults {
+        fun of(posts: List<Post>, limit: Long): PostResults {
+            val hasNext = posts.size > limit
+            val resultPosts = if (hasNext) posts.dropLast(1) else posts
+            val nextPostId = if (hasNext) posts.last().postId else null
             return PostResults(
-                postResults = posts.map { PostResult.from(it) },
-                hasNext = false,
-                nextPostId = null
-            )
-        }
-
-        fun of(posts: List<Post>, hasNext: Boolean, nextPostId: Long?): PostResults {
-            return PostResults(
-                postResults = posts.map { PostResult.from(it) },
+                postResults = resultPosts.map { PostResult.from(it) },
                 hasNext = hasNext,
                 nextPostId = nextPostId
             )

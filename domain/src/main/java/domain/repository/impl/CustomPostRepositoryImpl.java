@@ -1,8 +1,11 @@
 package domain.repository.impl;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import domain.constants.Language;
 import domain.entity.Post;
+import domain.constants.Status;
 import domain.repository.CustomPostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -17,152 +20,69 @@ import static domain.entity.QTag.tag;
 @RequiredArgsConstructor
 public class CustomPostRepositoryImpl implements CustomPostRepository {
 
-	private final JPAQueryFactory queryFactory;
+    private final JPAQueryFactory queryFactory;
 
-	@Override
-	public List<Post> findPosts(Long limit) {
-		List<Long> postIds = queryFactory
-				.select(post.postId)
-				.from(post)
-				.orderBy(post.postId.desc())
-				.limit(limit+1)
-				.fetch();
-		return queryFactory
-				.selectFrom(post)
-				.distinct()
-				.leftJoin(post.postTags, postTag).fetchJoin()
-				.leftJoin(postTag.tag, tag).fetchJoin()
-				.where(post.postId.in(postIds))
-				.orderBy(post.postId.desc())
-				.fetch();
-	}
+    @Override
+    public List<Post> searchPosts(Language language, String keyword, Long limit) {
+        List<Long> postIds = findPostIds(language, keyword, null, limit);
+        return findPostsWithTagsById(postIds);
+    }
 
-	@Override
-	public List<Post> findPosts(Long lastPostId, Long limit) {
-		List<Long> postIds = queryFactory
-				.select(post.postId)
-				.from(post)
-				.where(ltPostId(lastPostId))
-				.orderBy(post.postId.desc())
-				.limit(limit+1)
-				.fetch();
-		return queryFactory
-				.selectFrom(post)
-				.distinct()
-				.leftJoin(post.postTags, postTag).fetchJoin()
-				.leftJoin(postTag.tag, tag).fetchJoin()
-				.where(post.postId.in(postIds))
-				.orderBy(post.postId.desc())
-				.fetch();
-	}
+    @Override
+    public List<Post> searchPosts(Language language, String keyword, Long lastPostId, Long limit) {
+        List<Long> postIds = findPostIds(language, keyword, lastPostId, limit);
+        return findPostsWithTagsById(postIds);
+    }
 
-	@Override
-	public List<Post> findPostByTag(List<String> tags, Long limit) {
-		List<Long> postIds = queryFactory
-				.select(post.postId)
-				.from(post)
-				.join(post.postTags, postTag)
-				.join(postTag.tag, tag)
-				.where(inTagNames(tags))
-				.orderBy(post.postId.desc())
-				.distinct()
-				.limit(limit+1)
-				.fetch();
-		return queryFactory
-				.selectFrom(post)
-				.distinct()
-				.leftJoin(post.postTags, postTag).fetchJoin()
-				.leftJoin(postTag.tag, tag).fetchJoin()
-				.where(post.postId.in(postIds))
-				.orderBy(post.postId.desc())
-				.fetch();
-	}
+    private List<Long> findPostIds(Language language, String keyword, Long cursorPostId, Long limit) {
+        JPAQuery<Long> query = queryFactory
+                .select(post.postId)
+                .from(post);
 
-	@Override
-	public List<Post> findPostByTag(List<String> tags, Long lastPostId, Long limit) {
-		List<Long> postIds = queryFactory
-				.select(post.postId)
-				.from(post)
-				.join(post.postTags, postTag)
-				.join(postTag.tag, tag)
-				.where(
-					inTagNames(tags),
-					ltPostId(lastPostId)
-				)
-				.orderBy(post.postId.desc())
-				.distinct()
-				.limit(limit+1)
-				.fetch();
-		return queryFactory
-				.selectFrom(post)
-				.distinct()
-				.leftJoin(post.postTags, postTag).fetchJoin()
-				.leftJoin(postTag.tag, tag).fetchJoin()
-				.where(post.postId.in(postIds))
-				.orderBy(post.postId.desc())
-				.fetch();
-	}
+        if (keyword != null) {
+            query.leftJoin(post.postTags, postTag)
+                    .leftJoin(postTag.tag, tag);
+        }
 
-	@Override
-	public List<Post> findPostByKeyword(String keyword, Long limit) {
-		List<Long> postIds = queryFactory
-				.select(post.postId)
-				.from(post)
-				.leftJoin(post.postTags, postTag)
-				.leftJoin(postTag.tag, tag)
-				.where(startsWithTitleOrTag(keyword))
-				.orderBy(post.postId.desc())
-				.distinct()
-				.limit(limit+1)
-				.fetch();
-		return queryFactory
-				.selectFrom(post)
-				.distinct()
-				.leftJoin(post.postTags, postTag).fetchJoin()
-				.leftJoin(postTag.tag, tag).fetchJoin()
-				.where(post.postId.in(postIds))
-				.orderBy(post.postId.desc())
-				.fetch();
-	}
+        return query
+                .where(
+                    isPublished(),
+                    hasLanguage(language),
+                    matchesKeyword(keyword),
+                    afterCursor(cursorPostId)
+                )
+                .orderBy(post.postId.desc())
+                .distinct()
+                .limit(limit)
+                .fetch();
+    }
 
-	@Override
-	public List<Post> findPostByKeyword(String keyword, Long lastPostId, Long limit) {
-		List<Long> postIds = queryFactory
-				.select(post.postId)
-				.from(post)
-				.leftJoin(post.postTags, postTag)
-				.leftJoin(postTag.tag, tag)
-				.where(
-					startsWithTitleOrTag(keyword),
-					ltPostId(lastPostId)
-				)
-				.orderBy(post.postId.desc())
-				.distinct()
-				.limit(limit+1)
-				.fetch();
-		return queryFactory
-				.selectFrom(post)
-				.distinct()
-				.leftJoin(post.postTags, postTag).fetchJoin()
-				.leftJoin(postTag.tag, tag).fetchJoin()
-				.where(post.postId.in(postIds))
-				.orderBy(post.postId.desc())
-				.fetch();
-	}
+    private List<Post> findPostsWithTagsById(List<Long> postIds) {
+        return queryFactory
+                .selectFrom(post)
+                .distinct()
+                .leftJoin(post.postTags, postTag).fetchJoin()
+                .leftJoin(postTag.tag, tag).fetchJoin()
+                .where(post.postId.in(postIds))
+                .orderBy(post.postId.desc())
+                .fetch();
+    }
 
-	private BooleanExpression ltPostId(Long lastPostId) {
-		return lastPostId != null ? post.postId.lt(lastPostId) : null;
-	}
+    private BooleanExpression isPublished() {
+        return post.status.eq(Status.PUBLISHED);
+    }
 
-	private BooleanExpression inTagNames(List<String> tags) {
-		return tags != null && !tags.isEmpty() ? tag.name.in(tags) : null;
-	}
+    private BooleanExpression afterCursor(Long cursorPostId) {
+        return cursorPostId != null ? post.postId.lt(cursorPostId) : null;
+    }
 
-	private BooleanExpression startsWithTitleOrTag(String keyword) {
-		if (keyword == null) {
-			return null;
-		}
-		return post.title.startsWith(keyword)
-				.or(tag.name.startsWith(keyword));
-	}
+    private BooleanExpression matchesKeyword(String keyword) {
+        return keyword != null
+                ? post.title.startsWith(keyword).or(tag.name.startsWith(keyword))
+                : null;
+    }
+
+    private BooleanExpression hasLanguage(Language language) {
+        return language != null ? post.language.eq(language) : null;
+    }
 }

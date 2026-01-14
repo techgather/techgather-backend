@@ -1,5 +1,6 @@
 package api.service.dto.result
 
+import domain.constants.Language
 import domain.entity.Post
 import java.time.LocalDateTime
 
@@ -9,7 +10,9 @@ data class PostResult(
     val pubDate: LocalDateTime,
     val thumbnail: String,
     val url: String,
-    val tags: List<String>
+    val tags: List<String>,
+    val sourceSiteName: String,
+    val language: Language
 ) {
 
     companion object {
@@ -20,7 +23,9 @@ data class PostResult(
                 pubDate = post.pubDate,
                 thumbnail = post.thumbnail,
                 url = post.url,
-                tags = post.postTags.map { it.tag.name }
+                tags = post.postTags.map { it.tag.name },
+                sourceSiteName = post.sourceSiteName,
+                language = post.language
             )
         }
     }

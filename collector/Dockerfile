@@ -7,21 +7,23 @@ WORKDIR /app
 COPY gradlew .
 COPY gradle gradle
 #있으면 복사, 없으면 무시
-COPY settings.gradle* build.gradle* .
+COPY settings.gradle* build.gradle* ./
+
+# 실행 권한 필수
+RUN chmod +x gradlew
 
 # 소스 복사
-COPY collector/ collector/
+COPY . .
 
 #gradlew build
-RUN ./gradlew :collector:build
+RUN ./gradlew :collector:bootJar -x test --no-daemon
 
 # 런타임 스테이지
 FROM eclipse-temurin:17-jre AS runtime
-
 WORKDIR /app
 
 # 빌드된 JAR 복사
 COPY --from=build /app/collector/build/libs/*.jar app.jar
 
 # 포트 EXPOSE 없음
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-Dspring.profiles.active=docker", "-jar", "/app/app.jar"]

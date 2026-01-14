@@ -15,6 +15,9 @@ dependencies {
 
     runtimeOnly libs.mysql.connector.j
 
+    implementation("io.awspring.cloud:spring-cloud-aws-starter-parameter-store:3.4.2")
+    implementation("software.amazon.awssdk:secretsmanager:2.40.16")
+
     implementation project(':domain')
     implementation project(':application')
 }
