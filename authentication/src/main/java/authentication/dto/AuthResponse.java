@@ -7,7 +7,6 @@ import lombok.Builder;
 
 import java.time.Instant;
 
-// null인 경우 json 미포함
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record AuthResponse(

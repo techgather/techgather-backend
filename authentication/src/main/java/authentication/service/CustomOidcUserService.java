@@ -8,7 +8,6 @@ import authentication.userinfo.CustomOAuthUserInfo;
 import authentication.userinfo.UserInfoFactory;
 import authentication.userinfo.oidc.CustomOidcUser;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -21,22 +20,29 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-/**
- * OIDC 로그인 후 사용자 정보를 처리하는 Service
- *
- * - Provider(Cognito, Google 등)로부터 사용자 정보 조회
- * - Provider attributes → OAuthUserInfo 공통 모델로 변환
- * - DB에 회원 정보 신규 저장 또는 업데이트 (프로필 & 마지막 로그인 시간)
- * - CustomOidcUser를 반환하여 인증 Principal로 사용
- *  즉, SecurityContext에는 기본 OidcUser가 아닌 OAuthUserInfo가 포함된 CustomOidcUser가 저장
- */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CustomOidcUserService extends OidcUserService {
 
     private final UserRepository userRepository;
     private final UserInfoFactory userInfoFactory;
+
+    private interface RegistrationStrategy {
+        Role apply(OidcUser oidcUser, CustomOAuthUserInfo userInfo);
+    }
+
+    private final Map<String, RegistrationStrategy> registrationStrategies = Map.of(
+            OAuthClientRegistration.COGNITO,
+            (oidcUser, userInfo) -> {
+                saveOrUpdate(userInfo);
+                return Role.USER;
+            },
+            OAuthClientRegistration.COGNITO_ADMIN,
+            (oidcUser, userInfo) -> {
+                validateAdminGroup(oidcUser);
+                return Role.ADMIN;
+            }
+    );
 
     @Override
     public OidcUser loadUser(OidcUserRequest req) throws OAuth2AuthenticationException {
@@ -48,18 +54,8 @@ public class CustomOidcUserService extends OidcUserService {
         CustomOAuthUserInfo userInfo =
                 userInfoFactory.create(authProvider, oidcUser.getAttributes());
 
-        Role role;
-
-        if ("cognito".equals(registrationId)) {
-            // USER
-            role = Role.USER;
-            saveOrUpdate(userInfo);
-
-        } else if ("cognito-admin".equals(registrationId)) {
-            // ADMIN
-            validateAdminGroup(oidcUser);
-            role = Role.ADMIN;
-        } else {
+        RegistrationStrategy strategy = registrationStrategies.get(registrationId);
+        if (strategy == null) {
             throw new OAuth2AuthenticationException(
                     new OAuth2Error(
                             "not_admin",
@@ -68,6 +64,8 @@ public class CustomOidcUserService extends OidcUserService {
                     )
             );
         }
+
+        Role role = strategy.apply(oidcUser, userInfo);
 
         return new CustomOidcUser(oidcUser, userInfo, role);
     }
@@ -81,7 +79,7 @@ public class CustomOidcUserService extends OidcUserService {
         }
 
         userRepository.findByEmail(email)
-            .map(user -> user.updateFrom(userInfo))   // 기존 회원 -> 업데이트
+            .map(user -> user.updateFrom(userInfo)) // 기존 회원 -> 업데이트
             .orElseGet(() -> createNewUser(userInfo)); // 신규 회원
     }
 
