@@ -13,7 +13,7 @@ import java.util.List;
 public interface PostRepository extends JpaRepository<Post, Long>, CustomPostRepository {
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Post p SET p.status = :status WHERE p.postId = :postId")
+    @Query("UPDATE Post p SET p.status = :status WHERE p.postId IN :postIds")
     void updateStatusByPostId(@Param("postIds") List<Long> postIds,
                               @Param("status") Status status);
 
@@ -23,5 +23,6 @@ public interface PostRepository extends JpaRepository<Post, Long>, CustomPostRep
 
     List<Post> findAllByCreatedAtBefore(@Param("threshold") LocalDateTime threshold);
 
+    @Query("SELECT p.postId FROM Post p WHERE p.postId IN :postIds")
     List<Long> findPostByPostIdIn(@Param("postIds") List<Long> postIds);
 }
