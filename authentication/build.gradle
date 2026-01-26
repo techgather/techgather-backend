@@ -1,4 +1,7 @@
 dependencies {
+    implementation(project(":domain"))
+    implementation(project(":application"))
+
     implementation libs.spring.boot.starter.web
     implementation libs.spring.boot.starter.security
     implementation libs.spring.boot.starter.oauth2.client
@@ -9,6 +12,7 @@ dependencies {
     runtimeOnly libs.mysql.connector.j
 
     implementation libs.spring.cloud.aws.starter.parameter.store
+    implementation libs.aws.cognitoidentityprovider
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok
