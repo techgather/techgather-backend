@@ -1,45 +1,78 @@
 package authentication.controller;
 
-import authentication.config.CognitoProperties;
-import jakarta.servlet.ServletException;
+import application.exception.CommonClientErrorCode;
+import application.exception.UnAuthorizedException;
+import authentication.dto.principal.AuthenticatedUser;
+import authentication.dto.response.OAuthTokenResponse;
+import authentication.oauth.userinfo.CustomOAuthUserInfo;
+import authentication.service.AuthService;
+import authentication.util.CookieUtil;
+import authentication.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Optional;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
 @RequiredArgsConstructor
+@RequestMapping("/auth")
 public class AuthController {
 
-    private final CognitoProperties cognitoProperties;
+    private final AuthService authService;
+    private final JwtUtil jwtUtil;
 
-    @GetMapping("/logout")
-    public void logout(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        String clientId = cognitoProperties.getClientId();
-        String domain = cognitoProperties.getDomainUri();  //Hosted UI Domain
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/me")
+    public AuthenticatedUser getMe(@AuthenticationPrincipal AuthenticatedUser user){
+        return user;
+    }
 
-        // 임시값(향후 프론트로 변경)
-        String proto = Optional.ofNullable(request.getHeader("X-Forwarded-Proto"))
-                .orElse(request.getScheme());
+    @PostMapping("/refresh")
+    public CustomOAuthUserInfo refreshToken(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+//        String refreshToken = CookieUtil.extractRefreshToken(request);
+        String refreshToken = request.getHeader("X-Refresh-Token");
+        String accessToken = request.getHeader("X-Access-Token");
+        String clientId = jwtUtil.extractClientId(accessToken);
 
-        String host = Optional.ofNullable(request.getHeader("X-Forwarded-Host"))
-                .orElse(request.getServerName());
+        if (refreshToken == null) {
+            throw new UnAuthorizedException(CommonClientErrorCode.UNAUTHORIZED, null);
+        }
 
-        String logoutRedirect = proto + "://" + host + "/auth";
+        OAuthTokenResponse tokenResponse = authService.refreshToken(refreshToken, clientId);
 
-        String encodedLogoutRedirect = URLEncoder.encode(logoutRedirect, StandardCharsets.UTF_8);
+        response.setHeader(
+                HttpHeaders.AUTHORIZATION,
+                "Bearer " + tokenResponse.accessToken()
+        );
 
-        String redirectUrl = String.format("%s/logout?client_id=%s&logout_uri=%s",
-                domain, clientId, encodedLogoutRedirect);
+        if (tokenResponse.refreshToken() != null) {
+            CookieUtil.setRefreshTokenCookie(
+                    response,
+                    tokenResponse.refreshToken()
+            );
+        }
 
-        response.sendRedirect(redirectUrl);
+        return tokenResponse.userInfo();
+    }
+
+    @PostMapping("/logout")
+    public String logout(@AuthenticationPrincipal AuthenticatedUser user, HttpServletRequest request, HttpServletResponse res){
+        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+        String userName = user.sub();
+        if (userName == null) {
+            throw new IllegalArgumentException("User name is null.");
+        }
+
+        String logoutUrl = authService.logout(user.sub(), baseUrl);
+        
+        CookieUtil.deleteRefreshTokenCookie(res);
+
+        return logoutUrl;
     }
 }

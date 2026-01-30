@@ -23,6 +23,15 @@ spring:
         format_sql: true
         show_sql: true
 
+  config:
+    import: "aws-parameterstore:/tech-gather/local/"
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${spring.security.oauth2.client.provider.cognito.issuer-uri}
+
 springdoc:
   api-docs:
     path: /v3/api-docs

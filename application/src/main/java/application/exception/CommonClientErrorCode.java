@@ -8,7 +8,8 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum CommonClientErrorCode implements TechGatherErrorCode {
 
-	VALID_EXCEPTION("VALID_EXCEPTION", "", HttpStatus.BAD_REQUEST);
+	VALID_EXCEPTION("VALID_EXCEPTION", "", HttpStatus.BAD_REQUEST),
+    UNAUTHORIZED("UNAUTHORIZED", "", HttpStatus.UNAUTHORIZED);
 
 	private final String code;
 	private final String message;
