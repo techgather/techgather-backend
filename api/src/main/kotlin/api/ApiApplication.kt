@@ -16,3 +16,4 @@ fun main(args: Array<String>) {
 	runApplication<ApiApplication>(*args)
 }
 
+// CICD Test

@@ -1,12 +1,13 @@
 package api.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain
-import software.amazon.awssdk.auth.credentials.ContainerCredentialsProvider
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
-import software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region.AP_NORTHEAST_2
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 import software.amazon.awssdk.services.ssm.SsmClient
@@ -15,26 +16,39 @@ import software.amazon.awssdk.services.ssm.SsmClient
 class AwsConfig {
 
     @Bean
-    fun ssmClient(): SsmClient {
+    @Profile("local")
+    fun awsCredentialsProviderDev(): AwsCredentialsProvider {
+        return ProfileCredentialsProvider.create("tg-dev")
+    }
+
+    @Bean
+    @Profile("!local")
+    fun awsCredentialsProviderProd(
+        @Value("\${spring.cloud.aws.credentials.access-key}") accessKey: String,
+        @Value("\${spring.cloud.aws.credentials.secret-key}") secretKey: String
+    ): AwsCredentialsProvider {
+        return StaticCredentialsProvider.create(
+            AwsBasicCredentials.create(accessKey, secretKey)
+        )
+    }
+
+    @Bean
+    fun ssmClient(
+        awsCredentialsProvider: AwsCredentialsProvider
+    ): SsmClient {
         return SsmClient.builder()
             .region(AP_NORTHEAST_2)
-            .credentialsProvider(awsCredentialsProvider())
+            .credentialsProvider(awsCredentialsProvider)
             .build()
     }
 
     @Bean
-    fun awsCredentialsProvider(): AwsCredentialsProvider {
-        return AwsCredentialsProviderChain.builder()
-            .addCredentialsProvider(ProfileCredentialsProvider.create())
-            .addCredentialsProvider(ContainerCredentialsProvider.builder().build())
-            .addCredentialsProvider(WebIdentityTokenFileCredentialsProvider.builder().build())
-            .build()
-    }
-
-    @Bean
-    fun secretsManagerClient(): SecretsManagerClient {
+    fun secretsManagerClient(
+        awsCredentialsProvider: AwsCredentialsProvider
+    ): SecretsManagerClient {
         return SecretsManagerClient.builder()
-            .credentialsProvider(awsCredentialsProvider())
-            .region(AP_NORTHEAST_2).build()
+            .region(AP_NORTHEAST_2)
+            .credentialsProvider(awsCredentialsProvider)
+            .build()
     }
 }
