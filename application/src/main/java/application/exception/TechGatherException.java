@@ -16,4 +16,11 @@ public class TechGatherException extends RuntimeException {
         this.target = null;
         this.message = errorCode.getMessage();
     }
+
+    public TechGatherException(TechGatherErrorCode errorCode) {
+        this.errorCode = errorCode;
+        this.exception = null;
+        this.target = null;
+        this.message = errorCode.getMessage();
+    }
 }
