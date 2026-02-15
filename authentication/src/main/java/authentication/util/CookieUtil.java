@@ -3,15 +3,23 @@ package authentication.util;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.experimental.UtilityClass;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
+import org.springframework.stereotype.Component;
 
-@UtilityClass
-public final class CookieUtil {
+import java.time.Duration;
 
-    private final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
-    private final int REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 30; // 30일
+@Component
+public class CookieUtil {
+
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+
+    @Value("${app.auth.refresh-cookie-secure}")
+    private boolean refreshCookieSecure;
+
+    @Value("${app.auth.refresh-cookie-same-site}")
+    private String refreshCookieSameSite;
 
     public String extractRefreshToken(HttpServletRequest request) {
         if (request.getCookies() == null) {
@@ -29,10 +37,10 @@ public final class CookieUtil {
     public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
                 .path("/")
-                .maxAge(REFRESH_TOKEN_MAX_AGE)
+                .maxAge(Duration.ofDays(7))
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
+                .secure(refreshCookieSecure)
+                .sameSite(refreshCookieSameSite)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -43,11 +51,10 @@ public final class CookieUtil {
                 .path("/")
                 .maxAge(0)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
+                .secure(refreshCookieSecure)
+                .sameSite(refreshCookieSameSite)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }
-

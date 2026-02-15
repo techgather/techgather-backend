@@ -7,7 +7,6 @@ import authentication.dto.response.OAuthTokenResponse;
 import authentication.oauth.userinfo.CustomOAuthUserInfo;
 import authentication.service.AuthService;
 import authentication.util.CookieUtil;
-import authentication.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtUtil jwtUtil;
+    private final CookieUtil cookieUtil;
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/me")
@@ -35,16 +34,13 @@ public class AuthController {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-//        String refreshToken = CookieUtil.extractRefreshToken(request);
-        String refreshToken = request.getHeader("X-Refresh-Token");
-        String accessToken = request.getHeader("X-Access-Token");
-        String clientId = jwtUtil.extractClientId(accessToken);
+        String refreshToken = cookieUtil.extractRefreshToken(request);
 
         if (refreshToken == null) {
             throw new UnAuthorizedException(CommonClientErrorCode.UNAUTHORIZED, null);
         }
 
-        OAuthTokenResponse tokenResponse = authService.refreshToken(refreshToken, clientId);
+        OAuthTokenResponse tokenResponse = authService.refreshToken(refreshToken);
 
         response.setHeader(
                 HttpHeaders.AUTHORIZATION,
@@ -52,7 +48,7 @@ public class AuthController {
         );
 
         if (tokenResponse.refreshToken() != null) {
-            CookieUtil.setRefreshTokenCookie(
+            cookieUtil.setRefreshTokenCookie(
                     response,
                     tokenResponse.refreshToken()
             );
@@ -71,7 +67,7 @@ public class AuthController {
 
         String logoutUrl = authService.logout(user.sub(), baseUrl);
         
-        CookieUtil.deleteRefreshTokenCookie(res);
+        cookieUtil.deleteRefreshTokenCookie(res);
 
         return logoutUrl;
     }
