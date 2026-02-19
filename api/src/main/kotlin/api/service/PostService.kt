@@ -20,10 +20,11 @@ class PostService(
         lastPostId: Long?,
         limit: Long
     ): PostResults {
+        val status = postSearchCondition.status ?: Status.PUBLISHED
 
         val posts = when (lastPostId) {
-            null -> postRepository.searchPosts(language, postSearchCondition.keyword, limit + 1)
-            else -> postRepository.searchPosts(language, postSearchCondition.keyword, lastPostId, limit + 1)
+            null -> postRepository.searchPosts(language, postSearchCondition.keyword, status, limit + 1)
+            else -> postRepository.searchPosts(language, postSearchCondition.keyword, status, lastPostId, limit + 1)
         }
             .toList()
             .onEach { it.postTags.size }
@@ -40,4 +41,3 @@ class PostService(
     }
 
 }
-

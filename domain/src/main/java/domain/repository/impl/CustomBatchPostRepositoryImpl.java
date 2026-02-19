@@ -24,7 +24,7 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
     private static final String BINDING_PARAMETER = "?";
     private static final String DELIMITER = ", ";
     private static final String INSERT_SQL =
-            "INSERT INTO techgather.post (post_id, title, url, pub_date, thumbnail, source_site_name, language, status) " +
+            "INSERT INTO post (post_id, title, url, pub_date, thumbnail, source_site_name, language, status) " +
             "VALUES (:postId, :title, :url, :pubDate, :thumbnail, :sourceSiteName, :language, :status) " +
             "ON DUPLICATE KEY UPDATE " +
             "title = VALUES(title), " +
@@ -33,7 +33,7 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
             "source_site_name = VALUES(source_site_name), " +
             "language = VALUES(language), " +
             "status = VALUES(status)";
-    private static final String SELECT_SQL = "SELECT post_id, url FROM techgather.post WHERE url IN (%s)";
+    private static final String SELECT_SQL = "SELECT post_id, url FROM post WHERE url IN (%s)";
 
     @Override
     public void saveAllPost(List<Post> posts) {

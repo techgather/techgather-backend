@@ -22,7 +22,6 @@ class AdminPostController(
     private val postService: PostService
 ) {
 
-    @Role("ADMIN")
     @GetMapping("/admin-posts")
     @ResponseStatus(code = HttpStatus.OK)
     fun getDiscardedPosts(

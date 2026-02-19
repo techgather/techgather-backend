@@ -1,4 +1,4 @@
-package api.config
+package api.global.config
 
 import application.exception.CommonServerErrorCode
 import application.exception.TechGatherException
