@@ -23,18 +23,18 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Post> searchPosts(Language language, String keyword, Long limit) {
-        List<Long> postIds = findPostIds(language, keyword, null, limit);
+    public List<Post> searchPosts(Language language, String keyword, Status status, Long limit) {
+        List<Long> postIds = findPostIds(language, keyword, status, null, limit);
         return findPostsWithTagsById(postIds);
     }
 
     @Override
-    public List<Post> searchPosts(Language language, String keyword, Long lastPostId, Long limit) {
-        List<Long> postIds = findPostIds(language, keyword, lastPostId, limit);
+    public List<Post> searchPosts(Language language, String keyword, Status status, Long lastPostId, Long limit) {
+        List<Long> postIds = findPostIds(language, keyword, status, lastPostId, limit);
         return findPostsWithTagsById(postIds);
     }
 
-    private List<Long> findPostIds(Language language, String keyword, Long cursorPostId, Long limit) {
+    private List<Long> findPostIds(Language language, String keyword, Status status, Long cursorPostId, Long limit) {
         JPAQuery<Long> query = queryFactory
                 .select(post.postId)
                 .from(post);
@@ -46,7 +46,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
 
         return query
                 .where(
-                    isPublished(),
+                    hasStatus(status),
                     hasLanguage(language),
                     matchesKeyword(keyword),
                     afterCursor(cursorPostId)
@@ -68,8 +68,8 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .fetch();
     }
 
-    private BooleanExpression isPublished() {
-        return post.status.eq(Status.PUBLISHED);
+    private BooleanExpression hasStatus(Status status) {
+        return status != null ? post.status.eq(status) : null;
     }
 
     private BooleanExpression afterCursor(Long cursorPostId) {

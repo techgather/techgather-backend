@@ -19,7 +19,6 @@ class PostController(
     private val postService: PostService
 ) {
 
-    @Role("ADMIN", "USER")
     @GetMapping
     @ResponseStatus(code = HttpStatus.OK)
     fun getPublishedPosts(

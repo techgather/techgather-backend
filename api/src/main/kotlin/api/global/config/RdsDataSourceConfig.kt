@@ -1,4 +1,4 @@
-package api.config
+package api.global.config
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource

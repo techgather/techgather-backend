@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - development
-      - feature/collector
     paths:
       - 'collector/**'
       - '!.github/workflows/**'

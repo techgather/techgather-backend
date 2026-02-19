@@ -21,10 +21,10 @@ public class CustomBatchTagRepositoryImpl implements CustomBatchTagRepository {
 	private static final int BATCH_SIZE = 100;
 	private static final String BINDING_PARAMETER = "?";
 	private static final String DELIMITER = ", ";
-	private static final String INSERT_SQL = "INSERT INTO techgather.tag (id, name) VALUES (:id, :name) " +
+	private static final String INSERT_SQL = "INSERT INTO tag (id, name) VALUES (:id, :name) " +
  											 "ON DUPLICATE KEY UPDATE " +
  											 "name = VALUES(name)";
-	private static final String SELECT_SQL = "SELECT id, name FROM techgather.tag WHERE name IN (%s)";
+	private static final String SELECT_SQL = "SELECT id, name FROM tag WHERE name IN (%s)";
 
 	@Override
 	public void saveAllTag(List<Tag> tags) {
@@ -109,4 +109,3 @@ public class CustomBatchTagRepositoryImpl implements CustomBatchTagRepository {
 		}
 	}
 }
-

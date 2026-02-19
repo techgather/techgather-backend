@@ -1,4 +1,4 @@
-package api.exception
+package api.global.exception
 
 import application.exception.CommonClientErrorCode
 import org.springframework.http.ResponseEntity

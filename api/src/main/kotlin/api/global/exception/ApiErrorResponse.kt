@@ -1,4 +1,4 @@
-package api.exception
+package api.global.exception
 
 import org.springframework.http.HttpStatus
 
