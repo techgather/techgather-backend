@@ -1,11 +1,13 @@
 package authentication.dto.principal;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import domain.constants.Role;
+import java.util.List;
 
 public record AuthenticatedUser(
-        Long userId,
         String sub,
-        Role role
+        String username,
+        @JsonProperty("cognito:groups")
+        List<String> cognitoGroups
 ) {
 }

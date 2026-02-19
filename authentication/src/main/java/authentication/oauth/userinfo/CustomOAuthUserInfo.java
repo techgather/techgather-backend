@@ -19,6 +19,7 @@ public interface CustomOAuthUserInfo {
     // 신규 엔티티 생성 로직
     default User toEntity() {
         return User.builder()
+                .id(getSubject())
                 .email(getEmail())
                 .name(getName())
                 .picture(getPicture())

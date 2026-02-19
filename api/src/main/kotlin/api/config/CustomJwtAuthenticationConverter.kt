@@ -2,7 +2,6 @@ package api.config
 
 import application.exception.CommonClientErrorCode
 import application.exception.UnAuthorizedException
-import domain.constants.Role
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -14,47 +13,36 @@ import org.springframework.stereotype.Component
 class CustomJwtAuthenticationConverter : Converter<Jwt, AbstractAuthenticationToken> {
 
     companion object {
-        private const val CLAIM_USER_ID = "user_id"
-        private const val CLAIM_ROLE = "role"
         private const val CLAIM_SUB = "sub"
+        private const val CLAIM_COGNITO_GROUPS = "cognito:groups"
     }
 
     override fun convert(jwt: Jwt): AbstractAuthenticationToken {
-        val userId = getUserId(jwt)
-        val role = getRole(jwt)
-        val sub = jwt.getClaimAsString(CLAIM_SUB)
-
-        val authorities = listOf(SimpleGrantedAuthority(role.getAuthority()))
+        val sub = getSub(jwt)
+        val authorities = getAuthorities(jwt)
 
         return UsernamePasswordAuthenticationToken(
-            AuthenticatedUser(userId, sub, role),
+            AuthenticatedUser(sub),
             jwt,
             authorities
         )
     }
 
-    private fun getUserId(jwt: Jwt): Long {
-        val userIdValue = jwt.getClaim<Any>(CLAIM_USER_ID)
+    private fun getSub(jwt: Jwt): String {
+        return jwt.getClaimAsString(CLAIM_SUB)
+            ?.takeIf { it.isNotBlank() }
             ?: throw UnAuthorizedException(CommonClientErrorCode.UNAUTHORIZED, null)
-
-        return when (userIdValue) {
-            is Number -> userIdValue.toLong()
-            is String -> userIdValue.toLongOrNull()
-                ?: throw UnAuthorizedException(CommonClientErrorCode.UNAUTHORIZED, null)
-            else -> throw UnAuthorizedException(CommonClientErrorCode.UNAUTHORIZED, null)
-        }
     }
 
-    private fun getRole(jwt: Jwt): Role {
-        val roleStr = jwt.getClaimAsString(CLAIM_ROLE)
-            ?: throw UnAuthorizedException(CommonClientErrorCode.UNAUTHORIZED, null)
-
-        // "ROLE_USER" -> "USER" 변환
-        val roleName = roleStr.removePrefix("ROLE_")
-        return try {
-            Role.valueOf(roleName)
-        } catch (e: IllegalArgumentException) {
-            throw UnAuthorizedException(CommonClientErrorCode.UNAUTHORIZED, e)
+    private fun getAuthorities(jwt: Jwt): List<SimpleGrantedAuthority> {
+        val groups = jwt.getClaimAsStringList(CLAIM_COGNITO_GROUPS) ?: emptyList()
+        if (groups.isEmpty()) {
+            return listOf(SimpleGrantedAuthority("ROLE_USER"))
         }
+
+        return groups
+            .filter { it.isNotBlank() }
+            .map { SimpleGrantedAuthority("ROLE_$it") }
+            .ifEmpty { listOf(SimpleGrantedAuthority("ROLE_USER")) }
     }
 }

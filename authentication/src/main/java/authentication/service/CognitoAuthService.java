@@ -137,16 +137,4 @@ public class CognitoAuthService {
         return formData;
     }
 
-    public void saveUsaerIdToCognito(String username, Long userId) {
-        AdminUpdateUserAttributesRequest request = AdminUpdateUserAttributesRequest.builder()
-                .userPoolId(userPoolId)
-                .username(username)
-                .userAttributes(AttributeType.builder()
-                        .name("custom:user_id")
-                        .value(String.valueOf(userId))
-                        .build())
-                .build();
-
-        cognitoClient.adminUpdateUserAttributes(request);
-    }
 }

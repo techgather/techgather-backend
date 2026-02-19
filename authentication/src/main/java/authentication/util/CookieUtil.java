@@ -13,7 +13,8 @@ import java.time.Duration;
 @Component
 public class CookieUtil {
 
-    private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
+    private static final String LEGACY_REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
 
     @Value("${app.auth.refresh-cookie-secure}")
     private boolean refreshCookieSecure;
@@ -27,7 +28,8 @@ public class CookieUtil {
         }
 
         for (Cookie cookie : request.getCookies()) {
-            if (REFRESH_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
+            if (REFRESH_TOKEN_COOKIE_NAME.equals(cookie.getName())
+                    || LEGACY_REFRESH_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
                 return cookie.getValue();
             }
         }
@@ -54,7 +56,15 @@ public class CookieUtil {
                 .secure(refreshCookieSecure)
                 .sameSite(refreshCookieSameSite)
                 .build();
+        ResponseCookie legacyCookie = ResponseCookie.from(LEGACY_REFRESH_TOKEN_COOKIE_NAME, "")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(true)
+                .secure(refreshCookieSecure)
+                .sameSite(refreshCookieSameSite)
+                .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, legacyCookie.toString());
     }
 }

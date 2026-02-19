@@ -5,6 +5,7 @@ import authentication.oauth.service.CustomOidcUserService;
 import authentication.oauth.handler.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +22,7 @@ import java.util.List;
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
@@ -43,6 +45,7 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/login/**",
                                 "/auth/logout",
+                                "/auth/me",
                                 "/auth/refresh",
                                 "/h2-console/**")
                         .permitAll()
@@ -65,9 +68,15 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, authEx) -> {
+                            String reason = authEx.getMessage() == null ? "Unauthorized" : authEx.getMessage();
+                            String escapedReason = reason.replace("\"", "\\\"");
+                            log.warn("Unauthorized request: method={}, uri={}, reason={}",
+                                    req.getMethod(),
+                                    req.getRequestURI(),
+                                    reason);
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             res.setContentType("application/json;charset=UTF-8");
-                            res.getWriter().write("{\"message\": \"Unauthorized\"}");
+                            res.getWriter().write("{\"message\": \"Unauthorized\", \"reason\": \"" + escapedReason + "\"}");
                         })
                 )
                 .build();
@@ -80,7 +89,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(List.of(HttpHeaders.AUTHORIZATION));
+        configuration.setExposedHeaders(List.of(HttpHeaders.AUTHORIZATION, "X-Refresh-Token"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -27,7 +27,6 @@ public class CustomOidcUserService extends OidcUserService {
     private final UserRepository userRepository;
     private final UserInfoFactory userInfoFactory;
     private final CognitoAuthService cognitoAuthService;
-    private final CognitoAuthService adminCognitoAuthService;
 
     @Override
     @Transactional
@@ -43,9 +42,8 @@ public class CustomOidcUserService extends OidcUserService {
         // 2. 권한 결정 (Admin 경로 진입 시 Cognito 그룹 유효성 검사 포함)
         Role targetRole = determineRole(registrationId, oidcUser);
 
-        // 3. Cognito Custom Attribute에 DB의 PK 저장
+        // 3. 서비스 DB 동기화
         User user = processUserRegistration(userInfo, targetRole);
-        adminCognitoAuthService.saveUsaerIdToCognito(oidcUser.getSubject(), user.getId());
 
         // 4. 최종 인증 객체 반환 (registrationId를 포함하여 리프레시 토큰 등 후속 처리 지원)
         return new CustomOidcUser(oidcUser, userInfo, user.getRole());
@@ -55,14 +53,20 @@ public class CustomOidcUserService extends OidcUserService {
      * 유저 정보를 DB에 동기화하고, 신규 유저일 경우 그룹 할당 등 가입 절차 진행
      */
     private User processUserRegistration(CustomOAuthUserInfo userInfo, Role targetRole) {
+        String sub = userInfo.getSubject();
         String email = userInfo.getEmail();
+
+        if (sub == null || sub.isBlank()) {
+            throw new OAuth2AuthenticationException("OAuth2 공급자로부터 sub를 불러올 수 없습니다.");
+        }
 
         if (email == null) {
             throw new OAuth2AuthenticationException("OAuth2 공급자로부터 이메일을 불러올 수 없습니다.");
         }
 
-        return userRepository.findByEmail(email)
+        return userRepository.findById(sub)
                 .map(userInfo::updateEntity)
+                .or(() -> userRepository.findByEmail(email).map(userInfo::updateEntity))
                 .orElseGet(() -> registerNewUser(userInfo, targetRole, userInfo.getSubject()));
     }
 

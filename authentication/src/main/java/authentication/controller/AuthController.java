@@ -20,10 +20,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 public class AuthController {
 
+    private static final String REFRESH_TOKEN_HEADER = "X-Refresh-Token";
+
     private final AuthService authService;
     private final CookieUtil cookieUtil;
 
-    @PreAuthorize("hasRole('USER')")
     @GetMapping("/me")
     public AuthenticatedUser getMe(@AuthenticationPrincipal AuthenticatedUser user){
         return user;
@@ -34,7 +35,7 @@ public class AuthController {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-        String refreshToken = cookieUtil.extractRefreshToken(request);
+        String refreshToken = extractRefreshToken(request);
 
         if (refreshToken == null) {
             throw new UnAuthorizedException(CommonClientErrorCode.UNAUTHORIZED, null);
@@ -48,6 +49,7 @@ public class AuthController {
         );
 
         if (tokenResponse.refreshToken() != null) {
+            response.setHeader(REFRESH_TOKEN_HEADER, tokenResponse.refreshToken());
             cookieUtil.setRefreshTokenCookie(
                     response,
                     tokenResponse.refreshToken()
@@ -70,5 +72,22 @@ public class AuthController {
         cookieUtil.deleteRefreshTokenCookie(res);
 
         return logoutUrl;
+    }
+
+    private String extractRefreshToken(HttpServletRequest request) {
+        String headerToken = request.getHeader(REFRESH_TOKEN_HEADER);
+        if (headerToken != null && !headerToken.isBlank()) {
+            return headerToken;
+        }
+
+        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            String bearerToken = authorization.substring("Bearer ".length()).trim();
+            if (!bearerToken.isBlank()) {
+                return bearerToken;
+            }
+        }
+
+        return cookieUtil.extractRefreshToken(request);
     }
 }
