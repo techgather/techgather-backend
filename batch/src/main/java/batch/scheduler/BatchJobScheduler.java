@@ -17,7 +17,7 @@ import java.util.List;
 
 import static batch.config.ClockConfig.SERVER_TIME_ZONE;
 import static batch.constants.BatchConstants.RSS_COLLECT_JOB_NAME;
-import static domain.constants.Status.DISCARDED;
+import static domain.constants.PostStatus.DISCARDED;
 
 @Slf4j
 @Component
