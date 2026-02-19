@@ -2,7 +2,7 @@ package domain.entity;
 
 import domain.common.BaseTime;
 import domain.constants.Language;
-import domain.constants.Status;
+import domain.constants.PostStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -44,7 +44,7 @@ public class Post extends BaseTime {
 
 	@Column(name = "status")
 	@Enumerated(EnumType.STRING)
-	private Status status;
+	private PostStatus status;
 
 	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private Set<PostTag> postTags = new HashSet<>();
@@ -64,7 +64,7 @@ public class Post extends BaseTime {
 		post.thumbnail = thumbnail;
 		post.sourceSiteName = sourceSiteName;
 		post.language = Language.fromCode(language);
-		post.status = Status.NOT_PUBLISHED;
+		post.status = PostStatus.NOT_PUBLISHED;
 		return post;
 	}
 

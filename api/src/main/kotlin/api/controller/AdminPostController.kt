@@ -8,6 +8,7 @@ import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import api.service.PostService
 import domain.constants.Language
+import domain.constants.PostStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -17,31 +18,30 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping
+@RequestMapping("/admin/posts")
 class AdminPostController(
     private val postService: PostService
 ) {
 
-    @GetMapping("/admin-posts")
+    @GetMapping
     @ResponseStatus(code = HttpStatus.OK)
     fun getDiscardedPosts(
         @Valid searchCondition: PostSearchCondition,
+        @RequestParam(required = false) status: PostStatus?,
         @RequestParam(required = false) lastPostId: Long?,
         @RequestParam(defaultValue = "20") limit: Long,
         @RequestParam(required = false) language: Language?
     ): PostResponseList {
-        val results = postService.getPosts(searchCondition, language, lastPostId, limit)
+        val results = postService.getPosts(searchCondition, status, language, lastPostId, limit)
         return PostResponseList.from(results)
     }
 
-    @Role("ADMIN")
-    @PatchMapping("/admin-posts")
+    @PatchMapping
     @ResponseStatus(code = HttpStatus.OK)
     fun markedPostsStatus(
         @RequestBody request: UpdatePostStatusRequest
     ) {
-        postService.markedPostStatus(request.postIds)
+        postService.markedPostStatus(request.postIds, request.status)
     }
 
 }
-

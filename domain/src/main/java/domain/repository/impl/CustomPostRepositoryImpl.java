@@ -4,8 +4,8 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import domain.constants.Language;
+import domain.constants.PostStatus;
 import domain.entity.Post;
-import domain.constants.Status;
 import domain.repository.CustomPostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -23,18 +23,18 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Post> searchPosts(Language language, String keyword, Status status, Long limit) {
+    public List<Post> searchPosts(Language language, String keyword, PostStatus status, Long limit) {
         List<Long> postIds = findPostIds(language, keyword, status, null, limit);
         return findPostsWithTagsById(postIds);
     }
 
     @Override
-    public List<Post> searchPosts(Language language, String keyword, Status status, Long lastPostId, Long limit) {
+    public List<Post> searchPosts(Language language, String keyword, PostStatus status, Long lastPostId, Long limit) {
         List<Long> postIds = findPostIds(language, keyword, status, lastPostId, limit);
         return findPostsWithTagsById(postIds);
     }
 
-    private List<Long> findPostIds(Language language, String keyword, Status status, Long cursorPostId, Long limit) {
+    private List<Long> findPostIds(Language language, String keyword, PostStatus status, Long cursorPostId, Long limit) {
         JPAQuery<Long> query = queryFactory
                 .select(post.postId)
                 .from(post);
@@ -68,7 +68,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .fetch();
     }
 
-    private BooleanExpression hasStatus(Status status) {
+    private BooleanExpression hasStatus(PostStatus status) {
         return status != null ? post.status.eq(status) : null;
     }
 
