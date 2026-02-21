@@ -8,4 +8,6 @@ import java.util.List;
 public interface PostCategoryRepository extends JpaRepository<PostCategory, Long> {
 
     List<PostCategory> findAllByPostPostIdInAndCategoryIdIn(List<Long> postIds, List<Long> categoryIds);
+
+    void deleteAllByPostPostIdIn(List<Long> postIds);
 }
