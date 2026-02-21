@@ -28,7 +28,10 @@ class PostService(
             else -> postRepository.searchPosts(language, postSearchCondition.keyword, requestedStatus, lastPostId, limit + 1)
         }
             .toList()
-            .onEach { it.postTags.size }
+            .onEach {
+                it.postTags.size
+                it.postCategories.size
+            }
 
         return PostResults.of(posts, limit)
     }

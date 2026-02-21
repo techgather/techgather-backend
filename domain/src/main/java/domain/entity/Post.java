@@ -49,6 +49,9 @@ public class Post extends BaseTime {
 	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private Set<PostTag> postTags = new HashSet<>();
 
+	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	private Set<PostCategory> postCategories = new HashSet<>();
+
 	public static Post create(Long postId,
 							  String title,
 							  String url,

@@ -13,7 +13,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 import static domain.entity.QPost.post;
+import static domain.entity.QPostCategory.postCategory;
 import static domain.entity.QPostTag.postTag;
+import static domain.entity.QCategory.category;
+import static domain.entity.QCategoryGroup.categoryGroup;
 import static domain.entity.QTag.tag;
 
 @Repository
@@ -63,6 +66,9 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .distinct()
                 .leftJoin(post.postTags, postTag).fetchJoin()
                 .leftJoin(postTag.tag, tag).fetchJoin()
+                .leftJoin(post.postCategories, postCategory).fetchJoin()
+                .leftJoin(postCategory.category, category).fetchJoin()
+                .leftJoin(category.categoryGroup, categoryGroup).fetchJoin()
                 .where(post.postId.in(postIds))
                 .orderBy(post.postId.desc())
                 .fetch();
