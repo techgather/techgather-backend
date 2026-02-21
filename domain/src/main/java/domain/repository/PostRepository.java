@@ -25,4 +25,13 @@ public interface PostRepository extends JpaRepository<Post, Long>, CustomPostRep
 
     @Query("SELECT p.postId FROM Post p WHERE p.postId IN :postIds")
     List<Long> findPostByPostIdIn(@Param("postIds") List<Long> postIds);
+
+    @Query("""
+            SELECT DISTINCT p.sourceSiteName
+            FROM Post p
+            WHERE p.sourceSiteName IS NOT NULL
+              AND (:status IS NULL OR p.status = :status)
+            ORDER BY p.sourceSiteName ASC
+            """)
+    List<String> findDistinctSourceSiteNames(@Param("status") PostStatus status);
 }

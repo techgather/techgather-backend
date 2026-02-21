@@ -11,6 +11,7 @@ data class PostResponse(
     val thumbnail: String,
     val url: String,
     val tags: List<String>,
+    val categories: List<PostCategoryResponse>,
     val sourceSiteName: String,
     val language: Language
 ) {
@@ -24,8 +25,23 @@ data class PostResponse(
                 thumbnail = result.thumbnail,
                 url = result.url,
                 tags = result.tags,
+                categories = result.categories.map { PostCategoryResponse.from(it.groupName, it.categoryName) },
                 sourceSiteName = result.sourceSiteName,
                 language = result.language
+            )
+        }
+    }
+}
+
+data class PostCategoryResponse(
+    val groupName: String,
+    val categoryName: String
+) {
+    companion object {
+        fun from(groupName: String, categoryName: String): PostCategoryResponse {
+            return PostCategoryResponse(
+                groupName = groupName,
+                categoryName = categoryName
             )
         }
     }
