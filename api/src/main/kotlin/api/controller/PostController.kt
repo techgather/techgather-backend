@@ -35,4 +35,11 @@ class PostController(
         return PostResponseList.from(results)
     }
 
+    @GetMapping("/source-sites")
+    @ResponseStatus(code = HttpStatus.OK)
+    @Operation(summary = "소스 사이트 목록 조회", operationId = "u2-post-sources")
+    fun getSourceSites(): List<String> {
+        return postService.getSourceSiteNamesForUser()
+    }
+
 }

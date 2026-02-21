@@ -38,6 +38,7 @@ class PostService(
                 language,
                 postSearchCondition.keyword,
                 postSearchCondition.categoryIds,
+                postSearchCondition.sourceSiteName,
                 requestedStatus,
                 limit + 1
             )
@@ -45,6 +46,7 @@ class PostService(
                 language,
                 postSearchCondition.keyword,
                 postSearchCondition.categoryIds,
+                postSearchCondition.sourceSiteName,
                 requestedStatus,
                 lastPostId,
                 limit + 1
@@ -93,6 +95,17 @@ class PostService(
         }
 
         postCategoryRepository.saveAll(newMappings)
+    }
+
+    @Transactional(readOnly = true)
+    fun getSourceSiteNamesForUser(): List<String> {
+        return postRepository.findDistinctSourceSiteNames(PostStatus.PUBLISHED)
+    }
+
+    @Transactional(readOnly = true)
+    fun getSourceSiteNamesForAdmin(status: PostStatus?): List<String> {
+        val requestedStatus = status ?: PostStatus.NOT_PUBLISHED
+        return postRepository.findDistinctSourceSiteNames(requestedStatus)
     }
 
 }

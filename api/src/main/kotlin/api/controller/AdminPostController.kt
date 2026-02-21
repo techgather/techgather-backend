@@ -48,4 +48,13 @@ class AdminPostController(
         postService.markedPostStatus(request.postIds, request.status, request.categoryIds)
     }
 
+    @GetMapping("/source-sites")
+    @ResponseStatus(code = HttpStatus.OK)
+    @Operation(summary = "관리자 소스 사이트 목록 조회", operationId = "a3-post-sources")
+    fun getSourceSites(
+        @RequestParam(required = false) status: PostStatus?
+    ): List<String> {
+        return postService.getSourceSiteNamesForAdmin(status)
+    }
+
 }

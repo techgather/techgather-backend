@@ -26,18 +26,18 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Post> searchPosts(Language language, String keyword, List<Long> categoryIds, PostStatus status, Long limit) {
-        List<Long> postIds = findPostIds(language, keyword, categoryIds, status, null, limit);
+    public List<Post> searchPosts(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status, Long limit) {
+        List<Long> postIds = findPostIds(language, keyword, categoryIds, sourceSiteName, status, null, limit);
         return findPostsWithTagsById(postIds);
     }
 
     @Override
-    public List<Post> searchPosts(Language language, String keyword, List<Long> categoryIds, PostStatus status, Long lastPostId, Long limit) {
-        List<Long> postIds = findPostIds(language, keyword, categoryIds, status, lastPostId, limit);
+    public List<Post> searchPosts(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status, Long lastPostId, Long limit) {
+        List<Long> postIds = findPostIds(language, keyword, categoryIds, sourceSiteName, status, lastPostId, limit);
         return findPostsWithTagsById(postIds);
     }
 
-    private List<Long> findPostIds(Language language, String keyword, List<Long> categoryIds, PostStatus status, Long cursorPostId, Long limit) {
+    private List<Long> findPostIds(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status, Long cursorPostId, Long limit) {
         JPAQuery<Long> query = queryFactory
                 .select(post.postId)
                 .from(post);
@@ -55,6 +55,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .where(
                     hasStatus(status),
                     hasLanguage(language),
+                    hasSourceSiteName(sourceSiteName),
                     matchesKeyword(keyword),
                     hasCategories(categoryIds),
                     afterCursor(cursorPostId)
@@ -95,6 +96,13 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
 
     private BooleanExpression hasLanguage(Language language) {
         return language != null ? post.language.eq(language) : null;
+    }
+
+    private BooleanExpression hasSourceSiteName(String sourceSiteName) {
+        if (sourceSiteName == null || sourceSiteName.isBlank()) {
+            return null;
+        }
+        return post.sourceSiteName.equalsIgnoreCase(sourceSiteName.trim());
     }
 
     private BooleanExpression hasCategories(List<Long> categoryIds) {

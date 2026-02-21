@@ -14,7 +14,9 @@ import java.util.Set;
 @Table(name = "post", indexes = {
 	@Index(name = "idx_post_url", columnList = "url", unique = true),
 	@Index(name = "idx_post_id", columnList = "postId"),
-	@Index(name = "idx_post_title", columnList = "title")
+	@Index(name = "idx_post_title", columnList = "title"),
+	@Index(name = "idx_post_source_site_name", columnList = "sourceSiteName"),
+	@Index(name = "idx_post_status_source", columnList = "status, sourceSiteName")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

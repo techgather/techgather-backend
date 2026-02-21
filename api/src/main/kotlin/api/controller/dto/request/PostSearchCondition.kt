@@ -8,4 +8,6 @@ data class PostSearchCondition(
     val keyword: String? = null,
 
     val categoryIds: List<Long>? = null,
+
+    val sourceSiteName: String? = null,
 )
