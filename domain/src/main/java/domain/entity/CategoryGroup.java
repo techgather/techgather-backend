@@ -31,4 +31,8 @@ public class CategoryGroup {
         categoryGroup.name = name;
         return categoryGroup;
     }
+
+    public void changeName(String name) {
+        this.name = name;
+    }
 }

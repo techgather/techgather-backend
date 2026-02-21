@@ -1,0 +1,10 @@
+package api.controller.dto.request
+
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
+
+data class CreateCategoryGroupRequest(
+    @field:NotBlank(message = "그룹 이름은 필수입니다.")
+    @field:Size(max = 100, message = "그룹 이름은 100자 이하여야 합니다.")
+    val name: String
+)

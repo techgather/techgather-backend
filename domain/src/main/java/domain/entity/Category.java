@@ -39,4 +39,12 @@ public class Category {
         category.name = name;
         return category;
     }
+
+    public void changeCategoryGroup(CategoryGroup categoryGroup) {
+        this.categoryGroup = categoryGroup;
+    }
+
+    public void changeName(String name) {
+        this.name = name;
+    }
 }
