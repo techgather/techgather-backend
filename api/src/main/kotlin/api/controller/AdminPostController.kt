@@ -1,7 +1,7 @@
 package api.controller
 
 import api.controller.dto.request.PostSearchCondition
-import api.controller.dto.request.UpdatePostStatusRequest
+import api.controller.dto.request.UpdatePostsRequest
 import api.controller.dto.response.PostResponseList
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -43,9 +43,9 @@ class AdminPostController(
     @ResponseStatus(code = HttpStatus.OK)
     @Operation(summary = "게시글 상태 변경", operationId = "a2-post-status")
     fun markedPostsStatus(
-        @RequestBody request: UpdatePostStatusRequest
+        @RequestBody request: UpdatePostsRequest
     ) {
-        postService.markedPostStatus(request.postIds, request.status)
+        postService.markedPostStatus(request.postIds, request.status, request.categoryIds)
     }
 
 }
