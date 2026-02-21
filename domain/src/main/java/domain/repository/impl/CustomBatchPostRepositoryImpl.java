@@ -3,6 +3,7 @@ package domain.repository.impl;
 import domain.entity.Post;
 import domain.repository.CustomBatchPostRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -14,6 +15,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 @Repository
+@Slf4j
 @RequiredArgsConstructor
 public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository {
 
@@ -64,7 +66,7 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
                 })
                 .toList();
 
-        namedParameterJdbcTemplate.batchUpdate(INSERT_SQL, results.stream()
+        int[] updateCounts = namedParameterJdbcTemplate.batchUpdate(INSERT_SQL, results.stream()
                 .map(post -> {
                     Map<String, Object> paramMap = new HashMap<>();
                     paramMap.put("postId", post.getPostId());
@@ -78,6 +80,32 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
                     return new MapSqlParameterSource(paramMap);
                 })
                 .toArray(SqlParameterSource[]::new));
+
+        int inserted = 0;
+        int updated = 0;
+        int unchanged = 0;
+        int unknown = 0;
+
+        for (int count : updateCounts) {
+            if (count == 1) {
+                inserted++;
+            } else if (count == 2) {
+                updated++;
+            } else if (count == 0) {
+                unchanged++;
+            } else {
+                unknown++;
+            }
+        }
+
+        log.info(
+                "Post upsert result - total: {}, inserted: {}, updated: {}, unchanged: {}, unknown: {}",
+                updateCounts.length,
+                inserted,
+                updated,
+                unchanged,
+                unknown
+        );
     }
 
     private Map<String, Long> findPostIdsByUrls(List<String> urls) {

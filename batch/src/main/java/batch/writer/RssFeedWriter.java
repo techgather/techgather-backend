@@ -63,6 +63,7 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
                 .flatMap(msg -> msg.tags().stream())
                 .map(normalizer::normalize)
                 .distinct()
+                .sorted()
                 .toList();
     }
 
