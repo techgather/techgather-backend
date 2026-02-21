@@ -24,8 +24,21 @@ class PostService(
         val requestedStatus = status ?: PostStatus.NOT_PUBLISHED
 
         val posts = when (lastPostId) {
-            null -> postRepository.searchPosts(language, postSearchCondition.keyword, requestedStatus, limit + 1)
-            else -> postRepository.searchPosts(language, postSearchCondition.keyword, requestedStatus, lastPostId, limit + 1)
+            null -> postRepository.searchPosts(
+                language,
+                postSearchCondition.keyword,
+                postSearchCondition.categoryIds,
+                requestedStatus,
+                limit + 1
+            )
+            else -> postRepository.searchPosts(
+                language,
+                postSearchCondition.keyword,
+                postSearchCondition.categoryIds,
+                requestedStatus,
+                lastPostId,
+                limit + 1
+            )
         }
             .toList()
             .onEach {

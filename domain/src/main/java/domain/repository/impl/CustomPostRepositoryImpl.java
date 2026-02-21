@@ -26,18 +26,18 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Post> searchPosts(Language language, String keyword, PostStatus status, Long limit) {
-        List<Long> postIds = findPostIds(language, keyword, status, null, limit);
+    public List<Post> searchPosts(Language language, String keyword, List<Long> categoryIds, PostStatus status, Long limit) {
+        List<Long> postIds = findPostIds(language, keyword, categoryIds, status, null, limit);
         return findPostsWithTagsById(postIds);
     }
 
     @Override
-    public List<Post> searchPosts(Language language, String keyword, PostStatus status, Long lastPostId, Long limit) {
-        List<Long> postIds = findPostIds(language, keyword, status, lastPostId, limit);
+    public List<Post> searchPosts(Language language, String keyword, List<Long> categoryIds, PostStatus status, Long lastPostId, Long limit) {
+        List<Long> postIds = findPostIds(language, keyword, categoryIds, status, lastPostId, limit);
         return findPostsWithTagsById(postIds);
     }
 
-    private List<Long> findPostIds(Language language, String keyword, PostStatus status, Long cursorPostId, Long limit) {
+    private List<Long> findPostIds(Language language, String keyword, List<Long> categoryIds, PostStatus status, Long cursorPostId, Long limit) {
         JPAQuery<Long> query = queryFactory
                 .select(post.postId)
                 .from(post);
@@ -46,12 +46,17 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
             query.leftJoin(post.postTags, postTag)
                     .leftJoin(postTag.tag, tag);
         }
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            query.leftJoin(post.postCategories, postCategory)
+                    .leftJoin(postCategory.category, category);
+        }
 
         return query
                 .where(
                     hasStatus(status),
                     hasLanguage(language),
                     matchesKeyword(keyword),
+                    hasCategories(categoryIds),
                     afterCursor(cursorPostId)
                 )
                 .orderBy(post.postId.desc())
@@ -90,5 +95,12 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
 
     private BooleanExpression hasLanguage(Language language) {
         return language != null ? post.language.eq(language) : null;
+    }
+
+    private BooleanExpression hasCategories(List<Long> categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return null;
+        }
+        return category.id.in(categoryIds);
     }
 }
