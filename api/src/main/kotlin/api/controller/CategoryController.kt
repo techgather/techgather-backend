@@ -31,7 +31,7 @@ class CategoryController(
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "카테고리 그룹 단건 조회", operationId = "u2-cat-group")
     fun getCategoryGroup(
-        @PathVariable categoryGroupId: Long
+        @PathVariable categoryGroupId: String
     ): CategoryGroupResponse {
         return CategoryGroupResponse.from(categoryService.getCategoryGroup(categoryGroupId))
     }
@@ -40,7 +40,7 @@ class CategoryController(
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "카테고리 목록 조회", operationId = "u3-cat-list")
     fun getCategories(
-        @RequestParam(required = false) categoryGroupId: Long?
+        @RequestParam(required = false) categoryGroupId: String?
     ): List<CategoryResponse> {
         return categoryService.getCategories(categoryGroupId).map { CategoryResponse.from(it) }
     }
@@ -49,7 +49,7 @@ class CategoryController(
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "카테고리 단건 조회", operationId = "u4-cat-get")
     fun getCategory(
-        @PathVariable categoryId: Long
+        @PathVariable categoryId: String
     ): CategoryResponse {
         return CategoryResponse.from(categoryService.getCategory(categoryId))
     }

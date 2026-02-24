@@ -40,7 +40,7 @@ class AdminCategoryController(
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "카테고리 그룹 단건 조회", operationId = "a3-group-get")
     fun getCategoryGroup(
-        @PathVariable categoryGroupId: Long
+        @PathVariable categoryGroupId: String
     ): CategoryGroupResponse {
         return CategoryGroupResponse.from(categoryService.getCategoryGroup(categoryGroupId))
     }
@@ -49,7 +49,7 @@ class AdminCategoryController(
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "카테고리 그룹 수정", operationId = "a4-group-update")
     fun updateCategoryGroup(
-        @PathVariable categoryGroupId: Long,
+        @PathVariable categoryGroupId: String,
         @Valid @RequestBody request: UpdateCategoryGroupRequest
     ): CategoryGroupResponse {
         return CategoryGroupResponse.from(categoryService.updateCategoryGroup(categoryGroupId, request))
@@ -59,7 +59,7 @@ class AdminCategoryController(
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "카테고리 그룹 삭제", operationId = "a5-group-delete")
     fun deleteCategoryGroup(
-        @PathVariable categoryGroupId: Long
+        @PathVariable categoryGroupId: String
     ) {
         categoryService.deleteCategoryGroup(categoryGroupId)
     }
@@ -77,7 +77,7 @@ class AdminCategoryController(
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "카테고리 목록 조회", operationId = "a7-cat-list")
     fun getCategories(
-        @RequestParam(required = false) categoryGroupId: Long?
+        @RequestParam(required = false) categoryGroupId: String?
     ): List<CategoryResponse> {
         return categoryService.getCategories(categoryGroupId).map { CategoryResponse.from(it) }
     }
@@ -86,7 +86,7 @@ class AdminCategoryController(
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "카테고리 단건 조회", operationId = "a8-cat-get")
     fun getCategory(
-        @PathVariable categoryId: Long
+        @PathVariable categoryId: String
     ): CategoryResponse {
         return CategoryResponse.from(categoryService.getCategory(categoryId))
     }
@@ -95,7 +95,7 @@ class AdminCategoryController(
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "카테고리 수정", operationId = "a9-cat-update")
     fun updateCategory(
-        @PathVariable categoryId: Long,
+        @PathVariable categoryId: String,
         @Valid @RequestBody request: UpdateCategoryRequest
     ): CategoryResponse {
         return CategoryResponse.from(categoryService.updateCategory(categoryId, request))
@@ -105,7 +105,7 @@ class AdminCategoryController(
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "카테고리 삭제", operationId = "a10-cat-delete")
     fun deleteCategory(
-        @PathVariable categoryId: Long
+        @PathVariable categoryId: String
     ) {
         categoryService.deleteCategory(categoryId)
     }

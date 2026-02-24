@@ -1,10 +1,13 @@
 package api.controller.dto.response
 
 import api.service.dto.result.PostResult
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import domain.constants.Language
 import java.time.LocalDateTime
 
 data class PostResponse(
+    @field:JsonSerialize(using = ToStringSerializer::class)
     val postId: Long,
     val title: String,
     val pubDate: LocalDateTime,

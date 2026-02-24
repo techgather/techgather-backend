@@ -28,16 +28,18 @@ class PostService(
         postSearchCondition: PostSearchCondition,
         status: PostStatus?,
         language: Language?,
-        lastPostId: Long?,
+        lastPostId: String?,
         limit: Long
     ): PostResults {
         val requestedStatus = status ?: PostStatus.NOT_PUBLISHED
+        val parsedLastPostId = parseId(lastPostId, "lastPostId")
+        val parsedCategoryIds = parseIds(postSearchCondition.categoryIds, "categoryIds")
 
-        val posts = when (lastPostId) {
+        val posts = when (parsedLastPostId) {
             null -> postRepository.searchPosts(
                 language,
                 postSearchCondition.keyword,
-                postSearchCondition.categoryIds,
+                parsedCategoryIds,
                 postSearchCondition.sourceSiteName,
                 requestedStatus,
                 limit + 1
@@ -45,10 +47,10 @@ class PostService(
             else -> postRepository.searchPosts(
                 language,
                 postSearchCondition.keyword,
-                postSearchCondition.categoryIds,
+                parsedCategoryIds,
                 postSearchCondition.sourceSiteName,
                 requestedStatus,
-                lastPostId,
+                parsedLastPostId,
                 limit + 1
             )
         }
@@ -63,20 +65,23 @@ class PostService(
 
     @Transactional
     fun markedPostStatus(
-        postIds: List<Long>,
+        postIds: List<String>,
         status: PostStatus,
-        categoryIds: List<Long>? = null
+        categoryIds: List<String>? = null
     ) {
-        val existingPostIds = postRepository.findPostByPostIdIn(postIds)
+        val parsedPostIds = parseIds(postIds, "postIds")
+        val parsedCategoryIds = parseIds(categoryIds, "categoryIds")
+
+        val existingPostIds = postRepository.findPostByPostIdIn(parsedPostIds)
         postRepository.updateStatusByPostId(existingPostIds, status)
 
-        if (categoryIds == null || existingPostIds.isEmpty()) {
+        if (parsedCategoryIds == null || existingPostIds.isEmpty()) {
             return
         }
 
         postCategoryRepository.deleteAllByPostPostIdIn(existingPostIds)
 
-        val distinctCategoryIds = categoryIds.distinct()
+        val distinctCategoryIds = parsedCategoryIds.distinct()
         if (distinctCategoryIds.isEmpty()) {
             return
         }
@@ -108,4 +113,18 @@ class PostService(
         return postRepository.findDistinctSourceSiteNames(requestedStatus)
     }
 
+    private fun parseIds(ids: List<String>?, fieldName: String): List<Long>? {
+        if (ids == null) {
+            return null
+        }
+        return ids.map { parseId(it, fieldName) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$fieldName contains null value") }
+    }
+
+    private fun parseId(id: String?, fieldName: String): Long? {
+        if (id == null) {
+            return null
+        }
+        return id.toLongOrNull()
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid $fieldName: $id")
+    }
 }

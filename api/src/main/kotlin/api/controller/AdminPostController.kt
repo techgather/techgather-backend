@@ -31,7 +31,7 @@ class AdminPostController(
     fun getDiscardedPosts(
         @Valid searchCondition: PostSearchCondition,
         @RequestParam(required = false) status: PostStatus?,
-        @RequestParam(required = false) lastPostId: Long?,
+        @RequestParam(required = false) lastPostId: String?,
         @RequestParam(defaultValue = "20") limit: Long,
         @RequestParam(required = false) language: Language?
     ): PostResponseList {

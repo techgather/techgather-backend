@@ -4,7 +4,7 @@ import domain.constants.PostStatus
 
 data class UpdatePostsRequest(
 
-    val postIds: List<Long>,
+    val postIds: List<String>,
     val status: PostStatus,
-    val categoryIds: List<Long>? = null
+    val categoryIds: List<String>? = null
 )

@@ -1,10 +1,13 @@
 package api.controller.dto.response
 
 import api.service.dto.result.PostResults
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 
 data class PostResponseList(
     val posts: List<PostResponse>,
     val hasNext: Boolean,
+    @field:JsonSerialize(using = ToStringSerializer::class)
     val nextPostId: Long?
 ) {
 
