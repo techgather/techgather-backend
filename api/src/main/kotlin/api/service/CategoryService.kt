@@ -38,14 +38,14 @@ class CategoryService(
     }
 
     @Transactional(readOnly = true)
-    fun getCategoryGroup(categoryGroupId: Long): CategoryGroup {
-        return categoryGroupRepository.findById(categoryGroupId)
+    fun getCategoryGroup(categoryGroupId: String): CategoryGroup {
+        return categoryGroupRepository.findById(parseId(categoryGroupId, "categoryGroupId"))
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리 그룹을 찾을 수 없습니다.") }
     }
 
     @Transactional
-    fun updateCategoryGroup(categoryGroupId: Long, request: UpdateCategoryGroupRequest): CategoryGroup {
-        val categoryGroup = categoryGroupRepository.findById(categoryGroupId)
+    fun updateCategoryGroup(categoryGroupId: String, request: UpdateCategoryGroupRequest): CategoryGroup {
+        val categoryGroup = categoryGroupRepository.findById(parseId(categoryGroupId, "categoryGroupId"))
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리 그룹을 찾을 수 없습니다.") }
 
         val name = request.name.trim()
@@ -58,15 +58,16 @@ class CategoryService(
     }
 
     @Transactional
-    fun deleteCategoryGroup(categoryGroupId: Long) {
-        val categoryGroup = categoryGroupRepository.findById(categoryGroupId)
+    fun deleteCategoryGroup(categoryGroupId: String) {
+        val categoryGroup = categoryGroupRepository.findById(parseId(categoryGroupId, "categoryGroupId"))
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리 그룹을 찾을 수 없습니다.") }
         categoryGroupRepository.delete(categoryGroup)
     }
 
     @Transactional
     fun createCategory(request: CreateCategoryRequest): Category {
-        val categoryGroup = categoryGroupRepository.findById(request.categoryGroupId)
+        val categoryGroupId = parseId(request.categoryGroupId, "categoryGroupId")
+        val categoryGroup = categoryGroupRepository.findById(categoryGroupId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리 그룹을 찾을 수 없습니다.") }
 
         val name = request.name.trim()
@@ -78,26 +79,28 @@ class CategoryService(
     }
 
     @Transactional(readOnly = true)
-    fun getCategories(categoryGroupId: Long?): List<Category> {
-        return if (categoryGroupId == null) {
+    fun getCategories(categoryGroupId: String?): List<Category> {
+        val parsedCategoryGroupId = parseNullableId(categoryGroupId, "categoryGroupId")
+        return if (parsedCategoryGroupId == null) {
             categoryRepository.findAllByOrderByNameAsc()
         } else {
-            categoryRepository.findAllByCategoryGroupIdOrderByNameAsc(categoryGroupId)
+            categoryRepository.findAllByCategoryGroupIdOrderByNameAsc(parsedCategoryGroupId)
         }
     }
 
     @Transactional(readOnly = true)
-    fun getCategory(categoryId: Long): Category {
-        return categoryRepository.findById(categoryId)
+    fun getCategory(categoryId: String): Category {
+        return categoryRepository.findById(parseId(categoryId, "categoryId"))
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다.") }
     }
 
     @Transactional
-    fun updateCategory(categoryId: Long, request: UpdateCategoryRequest): Category {
-        val category = categoryRepository.findById(categoryId)
+    fun updateCategory(categoryId: String, request: UpdateCategoryRequest): Category {
+        val category = categoryRepository.findById(parseId(categoryId, "categoryId"))
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다.") }
 
-        val categoryGroup = categoryGroupRepository.findById(request.categoryGroupId)
+        val categoryGroupId = parseId(request.categoryGroupId, "categoryGroupId")
+        val categoryGroup = categoryGroupRepository.findById(categoryGroupId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리 그룹을 찾을 수 없습니다.") }
 
         val name = request.name.trim()
@@ -113,9 +116,21 @@ class CategoryService(
     }
 
     @Transactional
-    fun deleteCategory(categoryId: Long) {
-        val category = categoryRepository.findById(categoryId)
+    fun deleteCategory(categoryId: String) {
+        val category = categoryRepository.findById(parseId(categoryId, "categoryId"))
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다.") }
         categoryRepository.delete(category)
+    }
+
+    private fun parseNullableId(id: String?, fieldName: String): Long? {
+        if (id == null) {
+            return null
+        }
+        return parseId(id, fieldName)
+    }
+
+    private fun parseId(id: String, fieldName: String): Long {
+        return id.toLongOrNull()
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid $fieldName: $id")
     }
 }

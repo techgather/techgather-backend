@@ -27,7 +27,7 @@ class PostController(
     @Operation(summary = "게시글 목록 조회", operationId = "u1-post-list")
     fun getPublishedPosts(
         @Valid searchCondition: PostSearchCondition,
-        @RequestParam(required = false) lastPostId: Long?,
+        @RequestParam(required = false) lastPostId: String?,
         @RequestParam(defaultValue = "20") limit: Long,
         @RequestParam(required = false) language: Language?
     ): PostResponseList {
