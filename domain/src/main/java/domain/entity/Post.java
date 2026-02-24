@@ -14,7 +14,9 @@ import java.util.Set;
 @Table(name = "post", indexes = {
 	@Index(name = "idx_post_url", columnList = "url", unique = true),
 	@Index(name = "idx_post_id", columnList = "postId"),
-	@Index(name = "idx_post_title", columnList = "title")
+	@Index(name = "idx_post_title", columnList = "title"),
+	@Index(name = "idx_post_source_site_name", columnList = "sourceSiteName"),
+	@Index(name = "idx_post_status_source", columnList = "status, sourceSiteName")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -48,6 +50,9 @@ public class Post extends BaseTime {
 
 	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private Set<PostTag> postTags = new HashSet<>();
+
+	@OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	private Set<PostCategory> postCategories = new HashSet<>();
 
 	public static Post create(Long postId,
 							  String title,

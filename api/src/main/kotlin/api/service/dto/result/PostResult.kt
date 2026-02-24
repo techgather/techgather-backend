@@ -11,6 +11,7 @@ data class PostResult(
     val thumbnail: String,
     val url: String,
     val tags: List<String>,
+    val categories: List<PostCategoryResult>,
     val sourceSiteName: String,
     val language: Language
 ) {
@@ -24,9 +25,20 @@ data class PostResult(
                 thumbnail = post.thumbnail,
                 url = post.url,
                 tags = post.postTags.map { it.tag.name },
+                categories = post.postCategories.map {
+                    PostCategoryResult(
+                        groupName = it.category.categoryGroup.name,
+                        categoryName = it.category.name
+                    )
+                },
                 sourceSiteName = post.sourceSiteName,
                 language = post.language
             )
         }
     }
 }
+
+data class PostCategoryResult(
+    val groupName: String,
+    val categoryName: String
+)

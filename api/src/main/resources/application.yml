@@ -5,7 +5,7 @@ server:
 
 spring:
   profiles:
-    active: dev
+    active: local
 
 springdoc:
   api-docs:
@@ -14,6 +14,6 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
-    operations-sorter: method
+    operations-sorter: alpha
     tags-sorter: alpha
     display-request-duration: true
