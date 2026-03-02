@@ -25,7 +25,7 @@ class SecurityConfig {
                 authorize
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+                    .requestMatchers( "/posts/**").permitAll()
                     .requestMatchers("/admin/posts/**").permitAll()
                     .anyRequest().authenticated()
             }
