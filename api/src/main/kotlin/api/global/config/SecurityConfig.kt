@@ -26,7 +26,8 @@ class SecurityConfig {
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
                     .requestMatchers( "/posts/**").permitAll()
-                    .requestMatchers("/admin/posts/**").permitAll()
+                    .requestMatchers("/admin/**").permitAll()
+                    .requestMatchers("/categories/**").permitAll()
                     .anyRequest().authenticated()
             }
 //            .oauth2ResourceServer { oauth2 ->
