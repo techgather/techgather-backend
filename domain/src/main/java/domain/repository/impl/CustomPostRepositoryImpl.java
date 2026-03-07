@@ -60,7 +60,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                     hasCategories(categoryIds),
                     afterCursor(cursorPostId)
                 )
-                .orderBy(post.postId.desc())
+                .orderBy(post.pubDate.desc())
                 .distinct()
                 .limit(limit)
                 .fetch();
