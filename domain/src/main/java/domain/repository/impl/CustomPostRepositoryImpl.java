@@ -53,14 +53,14 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
 
         return query
                 .where(
-                    hasStatus(status),
-                    hasLanguage(language),
-                    hasSourceSiteName(sourceSiteName),
-                    matchesKeyword(keyword),
-                    hasCategories(categoryIds),
-                    afterCursor(cursorPostId)
+                        hasStatus(status),
+                        hasLanguage(language),
+                        hasSourceSiteName(sourceSiteName),
+                        matchesKeyword(keyword),
+                        hasCategories(categoryIds),
+                        afterCursor(cursorPostId)
                 )
-                .orderBy(post.pubDate.desc())
+                .orderBy(post.postId.desc())
                 .distinct()
                 .limit(limit)
                 .fetch();
@@ -76,7 +76,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .leftJoin(postCategory.category, category).fetchJoin()
                 .leftJoin(category.categoryGroup, categoryGroup).fetchJoin()
                 .where(post.postId.in(postIds))
-                .orderBy(post.pubDate.desc())
+                .orderBy(post.postId.desc())
                 .fetch();
     }
 
