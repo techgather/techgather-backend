@@ -76,7 +76,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .leftJoin(postCategory.category, category).fetchJoin()
                 .leftJoin(category.categoryGroup, categoryGroup).fetchJoin()
                 .where(post.postId.in(postIds))
-                .orderBy(post.postId.desc())
+                .orderBy(post.pubDate.desc())
                 .fetch();
     }
 
