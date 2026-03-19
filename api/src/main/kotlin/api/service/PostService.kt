@@ -107,13 +107,12 @@ class PostService(
 
     @Transactional(readOnly = true)
     fun getSourceSiteNamesForUser(): List<String> {
-        return postRepository.findDistinctSourceSiteNames(PostStatus.PUBLISHED)
+        return postRepository.findDistinctSourceSiteNames(null)
     }
 
     @Transactional(readOnly = true)
-    fun getSourceSiteNamesForAdmin(status: PostStatus?): List<String> {
-        val requestedStatus = status ?: PostStatus.NOT_PUBLISHED
-        return postRepository.findDistinctSourceSiteNames(requestedStatus)
+    fun getSourceSiteNamesForAdmin(): List<String> {
+        return postRepository.findDistinctSourceSiteNames(null)
     }
 
     private fun parseIds(ids: List<String>?, fieldName: String): List<Long>? {
