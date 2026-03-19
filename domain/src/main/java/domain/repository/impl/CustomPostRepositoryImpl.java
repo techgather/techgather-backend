@@ -1,5 +1,6 @@
 package domain.repository.impl;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -10,6 +11,7 @@ import domain.repository.CustomPostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static domain.entity.QPost.post;
@@ -27,19 +29,19 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
 
     @Override
     public List<Post> searchPosts(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status, Long limit) {
-        List<Long> postIds = findPostIds(language, keyword, categoryIds, sourceSiteName, status, null, limit);
+        List<Long> postIds = findPostIds(language, keyword, categoryIds, sourceSiteName, status, null, null, limit);
         return findPostsWithTagsById(postIds);
     }
 
     @Override
-    public List<Post> searchPosts(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status, Long lastPostId, Long limit) {
-        List<Long> postIds = findPostIds(language, keyword, categoryIds, sourceSiteName, status, lastPostId, limit);
+    public List<Post> searchPosts(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status, LocalDateTime lastPubDate, Long lastPostId, Long limit) {
+        List<Long> postIds = findPostIds(language, keyword, categoryIds, sourceSiteName, status, lastPubDate, lastPostId, limit);
         return findPostsWithTagsById(postIds);
     }
 
-    private List<Long> findPostIds(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status, Long cursorPostId, Long limit) {
-        JPAQuery<Long> query = queryFactory
-                .select(post.postId)
+    private List<Long> findPostIds(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status, LocalDateTime cursorPubDate, Long cursorPostId, Long limit) {
+        JPAQuery<Tuple> query = queryFactory
+                .select(post.postId, post.pubDate)
                 .from(post);
 
         if (keyword != null) {
@@ -58,12 +60,15 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                         hasSourceSiteName(sourceSiteName),
                         matchesKeyword(keyword),
                         hasCategories(categoryIds),
-                        afterCursor(cursorPostId)
+                        afterCursor(cursorPubDate, cursorPostId)
                 )
-                .orderBy(post.postId.desc())
+                .orderBy(post.pubDate.desc(), post.postId.desc())
                 .distinct()
                 .limit(limit)
-                .fetch();
+                .fetch()
+                .stream()
+                .map(tuple -> tuple.get(post.postId))
+                .toList();
     }
 
     private List<Post> findPostsWithTagsById(List<Long> postIds) {
@@ -76,7 +81,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .leftJoin(postCategory.category, category).fetchJoin()
                 .leftJoin(category.categoryGroup, categoryGroup).fetchJoin()
                 .where(post.postId.in(postIds))
-                .orderBy(post.postId.desc())
+                .orderBy(post.pubDate.desc(), post.postId.desc())
                 .fetch();
     }
 
@@ -84,8 +89,12 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
         return status != null ? post.status.eq(status) : null;
     }
 
-    private BooleanExpression afterCursor(Long cursorPostId) {
-        return cursorPostId != null ? post.postId.lt(cursorPostId) : null;
+    private BooleanExpression afterCursor(LocalDateTime cursorPubDate, Long cursorPostId) {
+        if (cursorPubDate == null || cursorPostId == null) {
+            return null;
+        }
+        return post.pubDate.lt(cursorPubDate)
+                .or(post.pubDate.eq(cursorPubDate).and(post.postId.lt(cursorPostId)));
     }
 
     private BooleanExpression matchesKeyword(String keyword) {

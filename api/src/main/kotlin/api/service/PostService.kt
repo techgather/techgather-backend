@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
+import java.time.LocalDateTime
 
 @Service
 class PostService(
@@ -34,6 +35,7 @@ class PostService(
         val requestedStatus = status ?: PostStatus.NOT_PUBLISHED
         val parsedLastPostId = parseId(lastPostId, "lastPostId")
         val parsedCategoryIds = parseIds(postSearchCondition.categoryIds, "categoryIds")
+        val cursorPubDate = resolveCursorPubDate(parsedLastPostId)
 
         val posts = when (parsedLastPostId) {
             null -> postRepository.searchPosts(
@@ -50,6 +52,7 @@ class PostService(
                 parsedCategoryIds,
                 postSearchCondition.sourceSiteName,
                 requestedStatus,
+                cursorPubDate,
                 parsedLastPostId,
                 limit + 1
             )
@@ -126,5 +129,17 @@ class PostService(
         }
         return id.toLongOrNull()
             ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid $fieldName: $id")
+    }
+
+    private fun resolveCursorPubDate(lastPostId: Long?): LocalDateTime? {
+        if (lastPostId == null) {
+            return null
+        }
+
+        return postRepository.findById(lastPostId)
+            .map { it.pubDate }
+            .orElseThrow {
+                ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid lastPostId: $lastPostId")
+            }
     }
 }
