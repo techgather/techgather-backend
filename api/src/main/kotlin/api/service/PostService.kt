@@ -35,12 +35,20 @@ class PostService(
         val requestedStatus = status ?: PostStatus.NOT_PUBLISHED
         val parsedLastPostId = parseId(lastPostId, "lastPostId")
         val parsedCategoryIds = parseIds(postSearchCondition.categoryIds, "categoryIds")
+        val keyword = postSearchCondition.keyword?.trim()?.takeIf { it.isNotEmpty() }
         val cursorPubDate = resolveCursorPubDate(parsedLastPostId)
+        val totalCount = postRepository.countPosts(
+            language,
+            keyword,
+            parsedCategoryIds,
+            postSearchCondition.sourceSiteName,
+            requestedStatus
+        )
 
         val posts = when (parsedLastPostId) {
             null -> postRepository.searchPosts(
                 language,
-                postSearchCondition.keyword,
+                keyword,
                 parsedCategoryIds,
                 postSearchCondition.sourceSiteName,
                 requestedStatus,
@@ -48,7 +56,7 @@ class PostService(
             )
             else -> postRepository.searchPosts(
                 language,
-                postSearchCondition.keyword,
+                keyword,
                 parsedCategoryIds,
                 postSearchCondition.sourceSiteName,
                 requestedStatus,
@@ -63,7 +71,7 @@ class PostService(
                 it.postCategories.size
             }
 
-        return PostResults.of(posts, limit)
+        return PostResults.of(posts, limit, totalCount)
     }
 
     @Transactional
@@ -119,15 +127,19 @@ class PostService(
         if (ids == null) {
             return null
         }
-        return ids.map { parseId(it, fieldName) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$fieldName contains null value") }
+        val parsedIds = ids
+            .mapNotNull { parseId(it, fieldName) }
+            .distinct()
+        return parsedIds.ifEmpty { null }
     }
 
     private fun parseId(id: String?, fieldName: String): Long? {
-        if (id == null) {
+        val normalizedId = id?.trim()
+        if (normalizedId.isNullOrEmpty()) {
             return null
         }
-        return id.toLongOrNull()
-            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid $fieldName: $id")
+        return normalizedId.toLongOrNull()
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid $fieldName: $normalizedId")
     }
 
     private fun resolveCursorPubDate(lastPostId: Long?): LocalDateTime? {

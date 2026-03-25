@@ -5,17 +5,19 @@ import domain.entity.Post
 data class PostResults(
     val postResults: List<PostResult>,
     val hasNext: Boolean,
-    val nextPostId: Long?
+    val nextPostId: Long?,
+    val totalCount: Long
 ) {
     companion object {
-        fun of(posts: List<Post>, limit: Long): PostResults {
+        fun of(posts: List<Post>, limit: Long, totalCount: Long): PostResults {
             val hasNext = posts.size > limit
             val resultPosts = if (hasNext) posts.dropLast(1) else posts
             val nextPostId = if (hasNext) resultPosts.lastOrNull()?.postId else null
             return PostResults(
                 postResults = resultPosts.map { PostResult.from(it) },
                 hasNext = hasNext,
-                nextPostId = nextPostId
+                nextPostId = nextPostId,
+                totalCount = totalCount
             )
         }
     }
