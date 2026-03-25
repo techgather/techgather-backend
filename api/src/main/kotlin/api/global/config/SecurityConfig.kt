@@ -2,7 +2,6 @@ package api.global.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -25,9 +24,11 @@ class SecurityConfig {
                 authorize
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
-                    .requestMatchers( "/posts/**").permitAll()
+                    .requestMatchers("/posts", "/posts/**").permitAll()
+                    .requestMatchers("/api/posts", "/api/posts/**").permitAll()
                     .requestMatchers("/admin/**").permitAll()
                     .requestMatchers("/categories/**").permitAll()
+                    .requestMatchers("/api/categories/**").permitAll()
                     .anyRequest().authenticated()
             }
 //            .oauth2ResourceServer { oauth2 ->
@@ -49,7 +50,13 @@ class SecurityConfig {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration().apply {
-            allowedOrigins = listOf("http://localhost:3000", "http://localhost:8888", "http://localhost:8080", "https://dev-pick.com")
+            allowedOrigins = listOf(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://localhost:8888",
+                "http://localhost:8080",
+                "https://dev-pick.com"
+            )
             allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
             allowCredentials = true

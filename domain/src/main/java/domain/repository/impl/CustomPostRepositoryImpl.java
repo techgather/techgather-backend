@@ -39,6 +39,34 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
         return findPostsWithTagsById(postIds);
     }
 
+    @Override
+    public long countPosts(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status) {
+        JPAQuery<Long> query = queryFactory
+                .select(post.postId.countDistinct())
+                .from(post);
+
+        if (keyword != null) {
+            query.leftJoin(post.postTags, postTag)
+                    .leftJoin(postTag.tag, tag);
+        }
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            query.leftJoin(post.postCategories, postCategory)
+                    .leftJoin(postCategory.category, category);
+        }
+
+        Long count = query
+                .where(
+                        hasStatus(status),
+                        hasLanguage(language),
+                        hasSourceSiteName(sourceSiteName),
+                        matchesKeyword(keyword),
+                        hasCategories(categoryIds)
+                )
+                .fetchOne();
+
+        return count == null ? 0L : count;
+    }
+
     private List<Long> findPostIds(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status, LocalDateTime cursorPubDate, Long cursorPostId, Long limit) {
         JPAQuery<Tuple> query = queryFactory
                 .select(post.postId, post.pubDate)

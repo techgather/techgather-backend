@@ -12,4 +12,6 @@ public interface CustomPostRepository {
 	List<Post> searchPosts(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status, Long limit);
 
 	List<Post> searchPosts(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status, LocalDateTime lastPubDate, Long lastPostId, Long limit);
+
+	long countPosts(Language language, String keyword, List<Long> categoryIds, String sourceSiteName, PostStatus status);
 }
