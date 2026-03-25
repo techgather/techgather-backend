@@ -11,7 +11,7 @@ data class PostResults(
         fun of(posts: List<Post>, limit: Long): PostResults {
             val hasNext = posts.size > limit
             val resultPosts = if (hasNext) posts.dropLast(1) else posts
-            val nextPostId = if (hasNext) posts.last().postId else null
+            val nextPostId = if (hasNext) resultPosts.lastOrNull()?.postId else null
             return PostResults(
                 postResults = resultPosts.map { PostResult.from(it) },
                 hasNext = hasNext,

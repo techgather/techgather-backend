@@ -25,8 +25,8 @@ class SwaggerConfig {
             .servers(
                 listOf(
                     Server()
-                        .url("http://localhost:8888/api")
-                        .description("api 모듈 엔드포인트"),
+                        .url("/api")
+                        .description("현재 호스트 기준 API 엔드포인트"),
                 )
             )
     }

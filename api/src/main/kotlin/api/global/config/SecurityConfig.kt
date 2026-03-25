@@ -25,8 +25,9 @@ class SecurityConfig {
                 authorize
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
-                    .requestMatchers("/admin/posts/**").permitAll()
+                    .requestMatchers( "/posts/**").permitAll()
+                    .requestMatchers("/admin/**").permitAll()
+                    .requestMatchers("/categories/**").permitAll()
                     .anyRequest().authenticated()
             }
 //            .oauth2ResourceServer { oauth2 ->
@@ -48,8 +49,8 @@ class SecurityConfig {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration().apply {
-            allowedOrigins = listOf("http://localhost:3000", "http://localhost:8888", "http://localhost:8080")
-            allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            allowedOrigins = listOf("http://localhost:3000", "http://localhost:8888", "http://localhost:8080", "https://dev-pick.com")
+            allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
             allowCredentials = true
         }
