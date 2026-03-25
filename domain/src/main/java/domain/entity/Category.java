@@ -29,14 +29,18 @@ public class Category {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "category_description", nullable = false, length = 500)
+    private String description;
+
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<PostCategory> postCategories = new HashSet<>();
 
-    public static Category create(Long id, CategoryGroup categoryGroup, String name) {
+    public static Category create(Long id, CategoryGroup categoryGroup, String name, String description) {
         Category category = new Category();
         category.id = id;
         category.categoryGroup = categoryGroup;
         category.name = name;
+        category.description = description;
         return category;
     }
 
@@ -46,5 +50,9 @@ public class Category {
 
     public void changeName(String name) {
         this.name = name;
+    }
+
+    public void changeDescription(String description) {
+        this.description = description;
     }
 }
