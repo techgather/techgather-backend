@@ -38,12 +38,12 @@ class RoleAspect(
 
         val requiredRoles = roleAnnotation.codes
 
-        val userRole = tokenClaims.role.name
-        val hasRequiredRole = requiredRoles.any { it == userRole }
+        val userRoles = tokenClaims.cognitoGroups.ifEmpty { listOf("USER") }
+        val hasRequiredRole = requiredRoles.any { required -> userRoles.contains(required) }
 
         if (!hasRequiredRole) {
             throw AccessDeniedException(
-                "권한이 없습니다. 필요한 역할: ${requiredRoles.joinToString(", ")}, 현재 역할: $userRole"
+                "권한이 없습니다. 필요한 역할: ${requiredRoles.joinToString(", ")}, 현재 역할: ${userRoles.joinToString(", ")}"
             )
         }
     }

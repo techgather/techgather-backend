@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum Status {
+public enum PostStatus {
 
     DISCARDED("DISCARDED", "검수 과정에서 가치가 없다고 판단되는 경우 가지는 상태값"),
     NOT_PUBLISHED("NOT_PUBLISHED", "배치를 거쳐 수집된 포스트가 가지는 초기 상태값"),

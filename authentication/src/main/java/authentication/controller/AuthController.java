@@ -7,7 +7,6 @@ import authentication.dto.response.OAuthTokenResponse;
 import authentication.oauth.userinfo.CustomOAuthUserInfo;
 import authentication.service.AuthService;
 import authentication.util.CookieUtil;
-import authentication.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +20,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final AuthService authService;
-    private final JwtUtil jwtUtil;
+    private static final String REFRESH_TOKEN_HEADER = "X-Refresh-Token";
 
-    @PreAuthorize("hasRole('USER')")
+    private final AuthService authService;
+    private final CookieUtil cookieUtil;
+
     @GetMapping("/me")
     public AuthenticatedUser getMe(@AuthenticationPrincipal AuthenticatedUser user){
         return user;
@@ -35,16 +35,13 @@ public class AuthController {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-//        String refreshToken = CookieUtil.extractRefreshToken(request);
-        String refreshToken = request.getHeader("X-Refresh-Token");
-        String accessToken = request.getHeader("X-Access-Token");
-        String clientId = jwtUtil.extractClientId(accessToken);
+        String refreshToken = extractRefreshToken(request);
 
         if (refreshToken == null) {
             throw new UnAuthorizedException(CommonClientErrorCode.UNAUTHORIZED, null);
         }
 
-        OAuthTokenResponse tokenResponse = authService.refreshToken(refreshToken, clientId);
+        OAuthTokenResponse tokenResponse = authService.refreshToken(refreshToken);
 
         response.setHeader(
                 HttpHeaders.AUTHORIZATION,
@@ -52,7 +49,8 @@ public class AuthController {
         );
 
         if (tokenResponse.refreshToken() != null) {
-            CookieUtil.setRefreshTokenCookie(
+            response.setHeader(REFRESH_TOKEN_HEADER, tokenResponse.refreshToken());
+            cookieUtil.setRefreshTokenCookie(
                     response,
                     tokenResponse.refreshToken()
             );
@@ -71,8 +69,25 @@ public class AuthController {
 
         String logoutUrl = authService.logout(user.sub(), baseUrl);
         
-        CookieUtil.deleteRefreshTokenCookie(res);
+        cookieUtil.deleteRefreshTokenCookie(res);
 
         return logoutUrl;
+    }
+
+    private String extractRefreshToken(HttpServletRequest request) {
+        String headerToken = request.getHeader(REFRESH_TOKEN_HEADER);
+        if (headerToken != null && !headerToken.isBlank()) {
+            return headerToken;
+        }
+
+        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            String bearerToken = authorization.substring("Bearer ".length()).trim();
+            if (!bearerToken.isBlank()) {
+                return bearerToken;
+            }
+        }
+
+        return cookieUtil.extractRefreshToken(request);
     }
 }

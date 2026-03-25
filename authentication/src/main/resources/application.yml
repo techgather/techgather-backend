@@ -6,7 +6,7 @@ server:
 
 spring:
   profiles:
-    default: dev   # 아무것도 지정하지 않으면 자동으로 dev
+    default: dev
 
   cloud:
     aws:
@@ -50,7 +50,7 @@ spring:
               - aws.cognito.signin.user.admin
       resourceserver:
         jwt:
-          issuer-uri: ${spring.security.oauth2.client.provider.cognito.issuer-uri}
+          issuer-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}
 
 logging:
   level:
@@ -58,22 +58,8 @@ logging:
     org.springframework.transaction: TRACE
     org.springframework.orm.jpa: DEBUG
 
----
-spring:
-  config:
-    import: "aws-parameterstore:/tech-gather/local/"
-  config.activate.on-profile: dev
-
-  datasource:
-    url: jdbc:mysql://localhost:3306/techgather
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: techgather
-    password: techgather
-    hikari:
-      maximum-pool-size: 10
-
----
-spring:
-  config:
-    import: "aws-parameterstore:/tech-gather/prod/"
-  config.activate.on-profile: prod
+app:
+  auth:
+    success-redirect-url: ${AUTH_SUCCESS_REDIRECT_URL:http://localhost:3000}
+    refresh-cookie-secure: false
+    refresh-cookie-same-site: Lax

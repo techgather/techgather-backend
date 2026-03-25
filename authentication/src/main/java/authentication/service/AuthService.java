@@ -14,8 +14,11 @@ public class AuthService {
         return cognitoAuthService.refresh(refreshToken, clientId);
     }
 
+    public OAuthTokenResponse refreshToken(String refreshToken) {
+        return cognitoAuthService.refreshWithUserClient(refreshToken);
+    }
+
     public String logout(String userName, String baseUrl) {
         return cognitoAuthService.globalSignOut(userName, baseUrl);
     }
 }
-

@@ -1,6 +1,6 @@
 package domain.repository;
 
-import domain.constants.Status;
+import domain.constants.PostStatus;
 import domain.entity.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -15,14 +15,23 @@ public interface PostRepository extends JpaRepository<Post, Long>, CustomPostRep
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.status = :status WHERE p.postId IN :postIds")
     void updateStatusByPostId(@Param("postIds") List<Long> postIds,
-                              @Param("status") Status status);
+                              @Param("status") PostStatus status);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM Post p WHERE p.status = :status")
-    void markedPostsStatus(@Param("status") Status status);
+    void markedPostsStatus(@Param("status") PostStatus status);
 
     List<Post> findAllByCreatedAtBefore(@Param("threshold") LocalDateTime threshold);
 
     @Query("SELECT p.postId FROM Post p WHERE p.postId IN :postIds")
     List<Long> findPostByPostIdIn(@Param("postIds") List<Long> postIds);
+
+    @Query("""
+            SELECT DISTINCT p.sourceSiteName
+            FROM Post p
+            WHERE p.sourceSiteName IS NOT NULL
+              AND (:status IS NULL OR p.status = :status)
+            ORDER BY p.sourceSiteName ASC
+            """)
+    List<String> findDistinctSourceSiteNames(@Param("status") PostStatus status);
 }

@@ -3,6 +3,7 @@ package domain.repository.impl;
 import domain.entity.Post;
 import domain.repository.CustomBatchPostRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -14,6 +15,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 @Repository
+@Slf4j
 @RequiredArgsConstructor
 public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository {
 
@@ -24,7 +26,7 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
     private static final String BINDING_PARAMETER = "?";
     private static final String DELIMITER = ", ";
     private static final String INSERT_SQL =
-            "INSERT INTO techgather.post (post_id, title, url, pub_date, thumbnail, source_site_name, language, status) " +
+            "INSERT INTO post (post_id, title, url, pub_date, thumbnail, source_site_name, language, status) " +
             "VALUES (:postId, :title, :url, :pubDate, :thumbnail, :sourceSiteName, :language, :status) " +
             "ON DUPLICATE KEY UPDATE " +
             "title = VALUES(title), " +
@@ -33,7 +35,7 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
             "source_site_name = VALUES(source_site_name), " +
             "language = VALUES(language), " +
             "status = VALUES(status)";
-    private static final String SELECT_SQL = "SELECT post_id, url FROM techgather.post WHERE url IN (%s)";
+    private static final String SELECT_SQL = "SELECT post_id, url FROM post WHERE url IN (%s)";
 
     @Override
     public void saveAllPost(List<Post> posts) {
@@ -64,7 +66,7 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
                 })
                 .toList();
 
-        namedParameterJdbcTemplate.batchUpdate(INSERT_SQL, results.stream()
+        int[] updateCounts = namedParameterJdbcTemplate.batchUpdate(INSERT_SQL, results.stream()
                 .map(post -> {
                     Map<String, Object> paramMap = new HashMap<>();
                     paramMap.put("postId", post.getPostId());
@@ -78,6 +80,32 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
                     return new MapSqlParameterSource(paramMap);
                 })
                 .toArray(SqlParameterSource[]::new));
+
+        int inserted = 0;
+        int updated = 0;
+        int unchanged = 0;
+        int unknown = 0;
+
+        for (int count : updateCounts) {
+            if (count == 1) {
+                inserted++;
+            } else if (count == 2) {
+                updated++;
+            } else if (count == 0) {
+                unchanged++;
+            } else {
+                unknown++;
+            }
+        }
+
+        log.info(
+                "Post upsert result - total: {}, inserted: {}, updated: {}, unchanged: {}, unknown: {}",
+                updateCounts.length,
+                inserted,
+                updated,
+                unchanged,
+                unknown
+        );
     }
 
     private Map<String, Long> findPostIdsByUrls(List<String> urls) {

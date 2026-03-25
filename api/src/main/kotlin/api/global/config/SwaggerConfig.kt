@@ -1,4 +1,4 @@
-package api.config
+package api.global.config
 
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
@@ -25,10 +25,9 @@ class SwaggerConfig {
             .servers(
                 listOf(
                     Server()
-                        .url("http://localhost:8888")
-                        .description("api 모듈 엔드포인트"),
+                        .url("/api")
+                        .description("현재 호스트 기준 API 엔드포인트"),
                 )
             )
     }
 }
-

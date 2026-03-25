@@ -1,12 +1,11 @@
-package api.config
+package api.global.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
@@ -26,31 +25,32 @@ class SecurityConfig {
                 authorize
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/v3/api-docs/**").permitAll()
+                    .requestMatchers( "/posts/**").permitAll()
+                    .requestMatchers("/admin/**").permitAll()
+                    .requestMatchers("/categories/**").permitAll()
                     .anyRequest().authenticated()
             }
-            .oauth2ResourceServer { oauth2 ->
-                oauth2.jwt { jwt ->
-                    jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
-                }
-            }
+//            .oauth2ResourceServer { oauth2 ->
+//                oauth2.jwt { jwt ->
+//                    jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
+//                }
+//            }
         return http.build()
     }
 
-    private fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
-        val grantedAuthoritiesConverter = JwtGrantedAuthoritiesConverter().apply {
-            setAuthoritiesClaimName("cognito:groups")
-            setAuthorityPrefix("ROLE_")
-        }
-        return JwtAuthenticationConverter().apply {
-            setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter)
-        }
-    }
-
+//    private fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
+//        val grantedAuthoritiesConverter = JwtGrantedAuthoritiesConverter().apply {
+//            setAuthoritiesClaimName("cognito:groups")
+//            setAuthorityPrefix("ROLE_")
+//        }
+//        return JwtAuthenticationConverter().apply {
+//            setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter)
+//        }
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration().apply {
-            allowedOrigins = listOf("http://localhost:3000", "http://localhost:8888")
-            allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            allowedOrigins = listOf("http://localhost:3000", "http://localhost:8888", "http://localhost:8080", "https://dev-pick.com")
+            allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
             allowCredentials = true
         }

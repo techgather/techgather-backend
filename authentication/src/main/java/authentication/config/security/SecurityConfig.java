@@ -5,16 +5,24 @@ import authentication.oauth.service.CustomOidcUserService;
 import authentication.oauth.handler.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
@@ -26,6 +34,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         return http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable()) // h2 콘솔 접근 시 CSRF 끄기
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable) // H2 콘솔은 iframe 사용
@@ -36,6 +45,7 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/login/**",
                                 "/auth/logout",
+                                "/auth/me",
                                 "/auth/refresh",
                                 "/h2-console/**")
                         .permitAll()
@@ -58,11 +68,31 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, authEx) -> {
+                            String reason = authEx.getMessage() == null ? "Unauthorized" : authEx.getMessage();
+                            String escapedReason = reason.replace("\"", "\\\"");
+                            log.warn("Unauthorized request: method={}, uri={}, reason={}",
+                                    req.getMethod(),
+                                    req.getRequestURI(),
+                                    reason);
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             res.setContentType("application/json;charset=UTF-8");
-                            res.getWriter().write("{\"message\": \"Unauthorized\"}");
+                            res.getWriter().write("{\"message\": \"Unauthorized\", \"reason\": \"" + escapedReason + "\"}");
                         })
                 )
                 .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8888", "http://localhost:8080", "https://dev-pick.com"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(List.of(HttpHeaders.AUTHORIZATION, "X-Refresh-Token"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

@@ -2,6 +2,7 @@ package authentication.service;
 
 import authentication.config.aws.CognitoProperties;
 import authentication.dto.response.OAuthTokenResponse;
+import authentication.oauth.service.OAuthClientRegistration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -47,6 +48,23 @@ public class CognitoAuthService {
 
     public OAuthTokenResponse refresh(String refreshToken, String clientId) {
         ClientRegistration registration = findRegistrationByClientId(clientId);
+
+        return restClient.post()
+                .uri(registration.getProviderDetails().getTokenUri())
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(createForm(refreshToken, registration.getClientId(), registration.getClientSecret()))
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (request, response) -> {
+                    throw new IllegalStateException("Failed to refresh token");
+                })
+                .body(OAuthTokenResponse.class);
+    }
+
+    public OAuthTokenResponse refreshWithUserClient(String refreshToken) {
+        ClientRegistration registration = clientRegistrationRepository.findByRegistrationId(OAuthClientRegistration.COGNITO);
+        if (registration == null) {
+            throw new IllegalStateException("Cognito client registration not found for user flow");
+        }
 
         return restClient.post()
                 .uri(registration.getProviderDetails().getTokenUri())
@@ -119,16 +137,4 @@ public class CognitoAuthService {
         return formData;
     }
 
-    public void saveUsaerIdToCognito(String username, Long userId) {
-        AdminUpdateUserAttributesRequest request = AdminUpdateUserAttributesRequest.builder()
-                .userPoolId(userPoolId)
-                .username(username)
-                .userAttributes(AttributeType.builder()
-                        .name("custom:user_id")
-                        .value(String.valueOf(userId))
-                        .build())
-                .build();
-
-        cognitoClient.adminUpdateUserAttributes(request);
-    }
 }

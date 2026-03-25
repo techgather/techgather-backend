@@ -20,11 +20,11 @@ public class CustomBatchPostTagRepositoryImpl implements CustomBatchPostTagRepos
 	private final SnowFlake snowflake = SnowFlake.getInstance();
 
 	private static final int BATCH_SIZE = 100;
-	private static final String INSERT_SQL = "INSERT IGNORE INTO techgather.post_tag (id, post_id, tag_id) " +
-											 "SELECT :id, p.post_id, t.id " +
+	private static final String INSERT_SQL = "INSERT IGNORE INTO post_tag (id, post_id, tag_id) " +
+												 "SELECT :id, p.post_id, t.id " +
  											 "FROM (SELECT :url AS url) AS input " +
- 											 "INNER JOIN techgather.post p ON p.url = input.url " +
-											 "INNER JOIN techgather.tag t ON t.name = :tagName";
+ 											 "INNER JOIN post p ON p.url = input.url " +
+											 "INNER JOIN tag t ON t.name = :tagName";
 
 	@Override
 	public void saveAllUrlAndTag(List<String> urls, List<String> tagNames) {
@@ -70,4 +70,3 @@ public class CustomBatchPostTagRepositoryImpl implements CustomBatchPostTagRepos
 		}
 	}
 }
-

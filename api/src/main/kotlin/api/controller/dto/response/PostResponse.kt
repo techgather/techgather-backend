@@ -1,16 +1,20 @@
 package api.controller.dto.response
 
 import api.service.dto.result.PostResult
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import domain.constants.Language
 import java.time.LocalDateTime
 
 data class PostResponse(
+    @field:JsonSerialize(using = ToStringSerializer::class)
     val postId: Long,
     val title: String,
     val pubDate: LocalDateTime,
     val thumbnail: String,
     val url: String,
     val tags: List<String>,
+    val categories: List<PostCategoryResponse>,
     val sourceSiteName: String,
     val language: Language
 ) {
@@ -24,8 +28,23 @@ data class PostResponse(
                 thumbnail = result.thumbnail,
                 url = result.url,
                 tags = result.tags,
+                categories = result.categories.map { PostCategoryResponse.from(it.groupName, it.categoryName) },
                 sourceSiteName = result.sourceSiteName,
                 language = result.language
+            )
+        }
+    }
+}
+
+data class PostCategoryResponse(
+    val groupName: String,
+    val categoryName: String
+) {
+    companion object {
+        fun from(groupName: String, categoryName: String): PostCategoryResponse {
+            return PostCategoryResponse(
+                groupName = groupName,
+                categoryName = categoryName
             )
         }
     }
