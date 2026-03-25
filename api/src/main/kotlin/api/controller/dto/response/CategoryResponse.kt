@@ -8,6 +8,7 @@ data class CategoryResponse(
     @field:JsonSerialize(using = ToStringSerializer::class)
     val id: Long,
     val name: String,
+    val description: String,
     @field:JsonSerialize(using = ToStringSerializer::class)
     val categoryGroupId: Long,
     val categoryGroupName: String
@@ -17,6 +18,7 @@ data class CategoryResponse(
             return CategoryResponse(
                 id = category.id,
                 name = category.name,
+                description = category.description,
                 categoryGroupId = category.categoryGroup.id,
                 categoryGroupName = category.categoryGroup.name
             )
