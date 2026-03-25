@@ -13,3 +13,4 @@ COPY --from=build api/snapshot-dependencies/ ./
 RUN true
 COPY --from=build api/application/ ./
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+# CICD 테스트
