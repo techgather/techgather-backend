@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
 import java.time.LocalDateTime
+import java.util.Locale
 
 @Service
 class PostService(
@@ -34,14 +35,15 @@ class PostService(
     ): PostResults {
         val requestedStatus = status ?: PostStatus.NOT_PUBLISHED
         val parsedLastPostId = parseId(lastPostId, "lastPostId")
-        val parsedCategoryIds = parseIds(postSearchCondition.categoryIds, "categoryIds")
+        val normalizedCategorySlugs = parseCategorySlugs(postSearchCondition.categorySlugs)
+        val normalizedSourceSiteNames = parseSourceSiteNames(postSearchCondition.sourceSiteNames)
         val keyword = postSearchCondition.keyword?.trim()?.takeIf { it.isNotEmpty() }
         val cursorPubDate = resolveCursorPubDate(parsedLastPostId)
         val totalCount = postRepository.countPosts(
             language,
             keyword,
-            parsedCategoryIds,
-            postSearchCondition.sourceSiteName,
+            normalizedCategorySlugs,
+            normalizedSourceSiteNames,
             requestedStatus
         )
 
@@ -49,16 +51,16 @@ class PostService(
             null -> postRepository.searchPosts(
                 language,
                 keyword,
-                parsedCategoryIds,
-                postSearchCondition.sourceSiteName,
+                normalizedCategorySlugs,
+                normalizedSourceSiteNames,
                 requestedStatus,
                 limit + 1
             )
             else -> postRepository.searchPosts(
                 language,
                 keyword,
-                parsedCategoryIds,
-                postSearchCondition.sourceSiteName,
+                normalizedCategorySlugs,
+                normalizedSourceSiteNames,
                 requestedStatus,
                 cursorPubDate,
                 parsedLastPostId,
@@ -140,6 +142,28 @@ class PostService(
         }
         return normalizedId.toLongOrNull()
             ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid $fieldName: $normalizedId")
+    }
+
+    private fun parseSourceSiteNames(sourceSiteNames: List<String>?): List<String>? {
+        if (sourceSiteNames == null) {
+            return null
+        }
+        val normalized = sourceSiteNames
+            .map { it.trim().lowercase(Locale.ROOT) }
+            .filter { it.isNotEmpty() }
+            .distinct()
+        return normalized.ifEmpty { null }
+    }
+
+    private fun parseCategorySlugs(categorySlugs: List<String>?): List<String>? {
+        if (categorySlugs == null) {
+            return null
+        }
+        val normalized = categorySlugs
+            .map { it.trim().lowercase(Locale.ROOT) }
+            .filter { it.isNotEmpty() }
+            .distinct()
+        return normalized.ifEmpty { null }
     }
 
     private fun resolveCursorPubDate(lastPostId: Long?): LocalDateTime? {
