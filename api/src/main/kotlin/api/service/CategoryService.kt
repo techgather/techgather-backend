@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.util.Locale
 
 @Service
 class CategoryService(
@@ -76,12 +77,16 @@ class CategoryService(
         }
 
         val name = request.name.trim()
+        val slug = normalizeSlug(request.slug)
         val description = request.description.trim()
         if (categoryRepository.existsByCategoryGroupIdAndName(categoryGroup.id, name)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 카테고리 이름입니다.")
         }
+        if (categoryRepository.existsBySlug(slug)) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 카테고리 slug입니다.")
+        }
 
-        return categoryRepository.save(Category.create(categoryId, categoryGroup, name, description))
+        return categoryRepository.save(Category.create(categoryId, categoryGroup, name, slug, description))
     }
 
     @Transactional(readOnly = true)
@@ -100,25 +105,29 @@ class CategoryService(
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다.") }
     }
 
+    @Transactional(readOnly = true)
+    fun getCategoryBySlug(slug: String): Category {
+        return categoryRepository.findBySlug(normalizeSlug(slug))
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다.") }
+    }
+
     @Transactional
     fun updateCategory(categoryId: String, request: UpdateCategoryRequest): Category {
         val category = categoryRepository.findById(parseId(categoryId, "categoryId"))
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다.") }
 
-        val categoryGroupId = parseId(request.categoryGroupId, "categoryGroupId")
-        val categoryGroup = categoryGroupRepository.findById(categoryGroupId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리 그룹을 찾을 수 없습니다.") }
-
         val name = request.name.trim()
+        val slug = normalizeSlug(request.slug)
         val description = request.description.trim()
-        val isSameGroup = category.categoryGroup.id == categoryGroup.id
-        val isSameName = category.name == name
-        if ((!isSameGroup || !isSameName) && categoryRepository.existsByCategoryGroupIdAndName(categoryGroup.id, name)) {
+        if (category.name != name && categoryRepository.existsByCategoryGroupIdAndName(category.categoryGroup.id, name)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 카테고리 이름입니다.")
         }
+        if (category.slug != slug && categoryRepository.existsBySlug(slug)) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 카테고리 slug입니다.")
+        }
 
-        category.changeCategoryGroup(categoryGroup)
         category.changeName(name)
+        category.changeSlug(slug)
         category.changeDescription(description)
         return category
     }
@@ -140,5 +149,14 @@ class CategoryService(
     private fun parseId(id: String, fieldName: String): Long {
         return id.toLongOrNull()
             ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid $fieldName: $id")
+    }
+
+    private fun normalizeSlug(raw: String): String {
+        val normalized = raw.trim().lowercase(Locale.ROOT)
+        val slugPattern = Regex("^[a-z0-9]+(?:-[a-z0-9]+)*$")
+        if (!slugPattern.matches(normalized)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid slug format: $raw")
+        }
+        return normalized
     }
 }

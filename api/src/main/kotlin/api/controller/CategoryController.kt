@@ -53,4 +53,13 @@ class CategoryController(
     ): CategoryResponse {
         return CategoryResponse.from(categoryService.getCategory(categoryId))
     }
+
+    @GetMapping("/slug/{slug}")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "카테고리 slug 단건 조회", operationId = "u5-cat-get-by-slug")
+    fun getCategoryBySlug(
+        @PathVariable slug: String
+    ): CategoryResponse {
+        return CategoryResponse.from(categoryService.getCategoryBySlug(slug))
+    }
 }

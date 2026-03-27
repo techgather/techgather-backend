@@ -91,6 +91,15 @@ class AdminCategoryController(
         return CategoryResponse.from(categoryService.getCategory(categoryId))
     }
 
+    @GetMapping("/slug/{slug}")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "카테고리 slug 단건 조회", operationId = "a11-cat-get-by-slug")
+    fun getCategoryBySlug(
+        @PathVariable slug: String
+    ): CategoryResponse {
+        return CategoryResponse.from(categoryService.getCategoryBySlug(slug))
+    }
+
     @PutMapping("/{categoryId}")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "카테고리 수정", operationId = "a9-cat-update")
