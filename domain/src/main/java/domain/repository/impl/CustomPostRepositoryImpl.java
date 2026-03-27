@@ -45,11 +45,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .select(post.postId.countDistinct())
                 .from(post);
 
-        if (keyword != null) {
-            query.leftJoin(post.postTags, postTag)
-                    .leftJoin(postTag.tag, tag);
-        }
-        if (categoryIds != null && !categoryIds.isEmpty()) {
+        if (keyword != null || (categoryIds != null && !categoryIds.isEmpty())) {
             query.leftJoin(post.postCategories, postCategory)
                     .leftJoin(postCategory.category, category);
         }
@@ -72,11 +68,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .select(post.postId, post.pubDate)
                 .from(post);
 
-        if (keyword != null) {
-            query.leftJoin(post.postTags, postTag)
-                    .leftJoin(postTag.tag, tag);
-        }
-        if (categoryIds != null && !categoryIds.isEmpty()) {
+        if (keyword != null || (categoryIds != null && !categoryIds.isEmpty())) {
             query.leftJoin(post.postCategories, postCategory)
                     .leftJoin(postCategory.category, category);
         }
@@ -127,7 +119,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
 
     private BooleanExpression matchesKeyword(String keyword) {
         return keyword != null
-                ? post.title.startsWith(keyword).or(tag.name.startsWith(keyword))
+                ? post.title.containsIgnoreCase(keyword).or(category.name.containsIgnoreCase(keyword))
                 : null;
     }
 
