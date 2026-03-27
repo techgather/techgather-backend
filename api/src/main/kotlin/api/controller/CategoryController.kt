@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/categories")
+@RequestMapping("/api/categories")
 @Tag(name = "1-2 User Categories", description = "User category read APIs")
 class CategoryController(
     private val categoryService: CategoryService

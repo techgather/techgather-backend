@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/admin/posts")
+@RequestMapping("/api/admin/posts")
 @Tag(name = "2-1 Admin Posts", description = "Admin post management APIs")
 class AdminPostController(
     private val postService: PostService

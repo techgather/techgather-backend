@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/posts")
+@RequestMapping("/api/posts")
 @Tag(name = "1-1 User Posts", description = "User post read APIs")
 class PostController(
     private val postService: PostService

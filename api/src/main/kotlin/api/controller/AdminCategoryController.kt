@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/admin/categories")
+@RequestMapping("/api/admin/categories")
 @Tag(name = "2-2 Admin Categories", description = "Admin category CRUD APIs")
 class AdminCategoryController(
     private val categoryService: CategoryService
