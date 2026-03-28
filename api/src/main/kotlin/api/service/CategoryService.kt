@@ -67,15 +67,10 @@ class CategoryService(
 
     @Transactional
     fun createCategory(request: CreateCategoryRequest): Category {
-        val categoryId = parseId(request.categoryId, "categoryId")
         val categoryGroupId = parseId(request.categoryGroupId, "categoryGroupId")
         val categoryGroup = categoryGroupRepository.findById(categoryGroupId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리 그룹을 찾을 수 없습니다.") }
-
-        if (categoryRepository.existsById(categoryId)) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 카테고리 ID입니다.")
-        }
-
+        
         val name = request.name.trim()
         val slug = normalizeSlug(request.slug)
         val description = request.description.trim()
@@ -86,7 +81,7 @@ class CategoryService(
             throw ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 카테고리 slug입니다.")
         }
 
-        return categoryRepository.save(Category.create(categoryId, categoryGroup, name, slug, description))
+        return categoryRepository.save(Category.create(snowFlake.nextId(), categoryGroup, name, slug, description))
     }
 
     @Transactional(readOnly = true)

@@ -25,7 +25,7 @@ class SwaggerConfig {
             .servers(
                 listOf(
                     Server()
-                        .url("/api")
+                        .url("/")
                         .description("현재 호스트 기준 API 엔드포인트"),
                 )
             )

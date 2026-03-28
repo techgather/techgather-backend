@@ -8,9 +8,6 @@ data class CreateCategoryRequest(
     @field:NotBlank(message = "카테고리 그룹 ID는 필수입니다.")
     val categoryGroupId: String,
 
-    @field:NotBlank(message = "카테고리 ID는 필수입니다.")
-    val categoryId: String,
-
     @field:NotBlank(message = "카테고리 이름은 필수입니다.")
     @field:Size(max = 100, message = "카테고리 이름은 100자 이하여야 합니다.")
     val name: String,
