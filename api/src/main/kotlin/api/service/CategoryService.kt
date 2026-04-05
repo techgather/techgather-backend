@@ -70,7 +70,7 @@ class CategoryService(
         val categoryGroupId = parseId(request.categoryGroupId, "categoryGroupId")
         val categoryGroup = categoryGroupRepository.findById(categoryGroupId)
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "카테고리 그룹을 찾을 수 없습니다.") }
-        
+
         val name = request.name.trim()
         val slug = normalizeSlug(request.slug)
         val description = request.description.trim()

@@ -8,6 +8,14 @@ class TargetProperties(
     var entries: Map<String, TargetProps> = emptyMap()
 )
 
+@ConfigurationProperties(prefix = "collector.run")
+class CollectorRunProperties(
+    var runOnStartup: Boolean = false,
+    var scheduledEnabled: Boolean = true,
+    var cron: String = "0 0 3 * * *",
+    var zone: String = "Asia/Seoul",
+)
+
 data class TargetProps(
     var url: String = "",
     var language: String = "KO",

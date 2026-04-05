@@ -1,5 +1,6 @@
 package collector
 
+import collector.worker.config.CollectorRunProperties
 import collector.worker.config.TargetProperties
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -7,7 +8,7 @@ import org.springframework.boot.runApplication
 import org.springframework.scheduling.annotation.EnableScheduling
 
 @SpringBootApplication
-@EnableConfigurationProperties(TargetProperties::class)
+@EnableConfigurationProperties(value = [TargetProperties::class, CollectorRunProperties::class])
 @EnableScheduling
 class CollectorApplication
 

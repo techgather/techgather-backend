@@ -4,6 +4,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.network.tls.TLSException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -41,7 +42,13 @@ class HttpFetcher: Fetcher {
     }
 
     override suspend fun fetch(url: String): String {
-        val response: HttpResponse = client.get(url)
-        return response.bodyAsText()
+        return try {
+            val response: HttpResponse = client.get(url)
+            response.bodyAsText()
+        } catch (e: TLSException) {
+            throw IllegalStateException("TLS handshake failed for url=$url", e)
+        } catch (e: Exception) {
+            throw IllegalStateException("HTTP fetch failed for url=$url", e)
+        }
     }
 }

@@ -8,6 +8,13 @@ spring:
       properties:
         spring.json.add.type.headers: false
 
+collector:
+  run:
+    run-on-startup: true
+    scheduled-enabled: false
+    cron: "0 0 3 * * *"
+    zone: "Asia/Seoul"
+
 target:
   actives: woowahan,toss,musinsa,naver,kurly,kakao,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog
   entries:
