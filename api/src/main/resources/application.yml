@@ -15,3 +15,7 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
+
+logging:
+  api:
+    app-name: Dev-Pick-BE

@@ -57,7 +57,6 @@ class ApiRequestLoggingFilter(
             "status" to status.toString(),
             "code" to code,
             "accountId" to "-",
-            "profileId" to "-",
             "durationMs" to (System.currentTimeMillis() - startedAt).toString(),
             "requestId" to requestId,
             "ip" to clientIp(request),
