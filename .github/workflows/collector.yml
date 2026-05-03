@@ -1,50 +1,50 @@
-name: Collector CI/CD
-
-on:
-  push:
-    branches:
-      - development
-    paths:
-      - 'collector/**'
-      - '!.github/workflows/**'
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
-        with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
-
-      - name: Build and Push Docker Image
-        run: |
-          chmod +x ./gradlew
-          ./gradlew :collector:bootJar
-          
-          REGISTRY="asia-northeast3-docker.pkg.dev"
-          REPOSITORY="tg-docker-registry"
-          IMAGE_TAG="tg-collector:latest"
-          
-          FULL_PATH=$(echo "$REGISTRY/${{ secrets.GCP_PROJECT_ID }}/$REPOSITORY/$IMAGE_TAG" | tr '[:upper:]' '[:lower:]')
-          
-          gcloud auth configure-docker $REGISTRY --quiet
-          
-          docker build -t $FULL_PATH -f ./collector/Dockerfile .
-          docker push $FULL_PATH
-
-      - name: Execute Remote Deployment Script
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.GCP_SERVER_IP }}
-          username: ${{ secrets.GCP_SERVER_USER }}
-          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
-          script: |
-            echo "Starting deployment script..."
-            cd ~/scripts
-            ./collector-deploy.sh
+#name: Collector CI/CD
+#
+#on:
+#  push:
+#    branches:
+#      - development
+#    paths:
+#      - 'collector/**'
+#      - '!.github/workflows/**'
+#
+#jobs:
+#  build-and-deploy:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - id: 'auth'
+#        name: 'Authenticate to Google Cloud'
+#        uses: 'google-github-actions/auth@v2'
+#        with:
+#          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+#
+#      - name: Build and Push Docker Image
+#        run: |
+#          chmod +x ./gradlew
+#          ./gradlew :collector:bootJar
+#
+#          REGISTRY="asia-northeast3-docker.pkg.dev"
+#          REPOSITORY="tg-docker-registry"
+#          IMAGE_TAG="tg-collector:latest"
+#
+#          FULL_PATH=$(echo "$REGISTRY/${{ secrets.GCP_PROJECT_ID }}/$REPOSITORY/$IMAGE_TAG" | tr '[:upper:]' '[:lower:]')
+#
+#          gcloud auth configure-docker $REGISTRY --quiet
+#
+#          docker build -t $FULL_PATH -f ./collector/Dockerfile .
+#          docker push $FULL_PATH
+#
+#      - name: Execute Remote Deployment Script
+#        uses: appleboy/ssh-action@v1.0.3
+#        with:
+#          host: ${{ secrets.GCP_SERVER_IP }}
+#          username: ${{ secrets.GCP_SERVER_USER }}
+#          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+#          script: |
+#            echo "Starting deployment script..."
+#            cd ~/scripts
+#            ./collector-deploy.sh
