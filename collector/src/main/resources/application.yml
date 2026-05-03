@@ -16,7 +16,7 @@ collector:
     zone: "Asia/Seoul"
 
 target:
-  actives: woowahan,toss,musinsa,naver,kurly,kakao,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog
+  actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog
   entries:
     woowahan:
       url: https://techblog.woowahan.com/feed
@@ -63,8 +63,29 @@ target:
           type: rssV2Extractor
           useDefaultThumbnail: false
           defaultThumbnail: ""
+#    kakao: 미수집 (블로그 운영 중단 - 마지막 포스팅 2023-05-19)
+#      url: https://tech.kakaoenterprise.com/feed
+#      siteUrl: https://tech.kakaoenterprise.com
+#      adapter:
+#        crawler:
+#          type: htmlCrawler
+#        extractor:
+#          type: rssV2Extractor
+#          useDefaultThumbnail: false
+#          defaultThumbnail: ""
     kakao:
-      url: https://tech.kakaoenterprise.com/feed
+      url: https://tech.kakao.com/feed
+      siteUrl: https://tech.kakao.com
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssV2Extractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    kakao-pay:
+      url: https://tech.kakaopay.com/rss
+      siteUrl: https://tech.kakaopay.com
       adapter:
         crawler:
           type: htmlCrawler

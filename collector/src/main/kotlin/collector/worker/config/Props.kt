@@ -18,6 +18,7 @@ class CollectorRunProperties(
 
 data class TargetProps(
     var url: String = "",
+    var siteUrl: String = "",
     var language: String = "KO",
     var adapter: AdapterProps,
 )
