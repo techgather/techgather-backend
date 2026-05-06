@@ -45,13 +45,14 @@ collector (RSS/HTML scrape)
           → frontend
 ```
 
-### Key Architectural Patterns
+#### Key Architectural Patterns
 
 - **Domain module** is a pure library (no Spring Boot main class). All JPA entities and repositories live here and are shared by `api` and `batch`.
 - **Application module** provides shared exceptions (`TechGatherException` hierarchy with `*ErrorCode` enums) and the `SnowFlake` distributed ID generator used for `Post` IDs.
-- **API module** uses AOP for authorization: `@Role` annotation + `RoleAspect`. JWT claims are extracted by `CustomJwtAuthenticationConverter`.
-- **Collector** follows a hexagonal adapter pattern: `HtmlCrawler` → `RssV2Extractor`/`AtomExtractor` → `ThumbnailDownloader` → `KafkaPublisher`. Sources are provider-configured (24 Korean tech company blogs).
-- **QueryDSL** is used for complex queries alongside Spring Data JPA. Custom repositories are named `Custom*Repository` with implementations in `*RepositoryImpl`.
+- **API module** uses AOP for authorization: `@Role` annotation + `RoleAspect`. JWT claims are extracted by `CustomJwtAuthenticationConverter`. Admin endpoints are under `/api/admin/**`.
+- **Collector** follows a hexagonal adapter pattern: `HtmlCrawler` → `RssV2Extractor`/`AtomExtractor` → `ThumbnailDownloader` → `KafkaPublisher`. Sources are provider-configured (24 Korean tech company blogs). Scheduled daily at 3 AM Seoul time (`"0 0 3 * * *"`).
+- **QueryDSL** is used for complex queries alongside Spring Data JPA. Custom repositories are named `Custom*Repository` with implementations in `*RepositoryImpl`. Q-classes are generated at compile time into `build/generated/` — never commit them.
+- **Dual write strategy**: API and domain use JPA (Hibernate, batch_size=100). Batch module uses JDBC native SQL via `NamedParameterJdbcTemplate` for bulk upserts (`ON DUPLICATE KEY UPDATE`).
 
 ## Key Entities & Data Model
 
@@ -71,11 +72,25 @@ TechGatherException (base)
 ```
 `GlobalExceptionHandler` in the API module maps these to `ApiErrorResponse`. Always use the existing error code enums rather than throwing raw exceptions.
 
+## Kafka
+
+- **Topic**: `post` — collector publishes, batch consumes
+- **Consumer group**: `batch-consumer-group`
+- **Serialization**: key=`StringSerializer`, value=`JsonSerializer` (Jackson). Consumer trusts all packages (`spring.json.trusted.packages: "*"`)
+- **DTO**: `RssFeedMessage` is the Kafka payload exchanged between collector and batch
+
+## Testing
+
+- **Framework**: JUnit 5 (Jupiter) for all modules; Kotlin modules use `kotlin-test-junit5`
+- **Available test slices**: `spring-boot-starter-test`, `spring-security-test`, `spring-batch-test`, `spring-kafka-test`
+- No mocking framework (MockK/Mockito) is currently configured
+
 ## Configuration & Secrets
 
 - Profile `dev` is the default (local); `docker` is for containerized; `prod` for production.
-- Sensitive values come from **AWS Secrets Manager** and **AWS Parameter Store** (not `.env` files).
-- Environment variables needed for local dev are documented in each module's `application.yml`.
+- Sensitive values come from **AWS Secrets Manager** (`dev/db/parameter`) and **AWS Parameter Store** (prefix: `/tech-gather/dev/`) — not `.env` files.
+- AWS region: `ap-northeast-2` (Seoul). Local dev requires valid `aws configure` credentials.
+- Local dev connects to a **remote RDS** instance — Docker Compose only spins up Kafka, not MySQL.
 
 ## CI/CD
 
