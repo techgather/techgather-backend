@@ -83,33 +83,26 @@ class PostService(
         categoryIds: List<String>? = null
     ) {
         val parsedPostIds = parseIds(postIds, "postIds")
-        val parsedCategoryIds = parseIds(categoryIds, "categoryIds")
-
         val existingPostIds = postRepository.findPostByPostIdIn(parsedPostIds)
         postRepository.updateStatusByPostId(existingPostIds, status)
 
-        if (parsedCategoryIds == null || existingPostIds.isEmpty()) {
+        if (categoryIds == null || existingPostIds.isEmpty()) {
             return
         }
 
         postCategoryRepository.deleteAllByPostPostIdIn(existingPostIds)
 
-        val distinctCategoryIds = parsedCategoryIds.distinct()
-        if (distinctCategoryIds.isEmpty()) {
-            return
-        }
+        // categoryIds가 빈 리스트면 카테고리 전체 제거 후 종료
+        val parsedCategoryIds = parseIds(categoryIds, "categoryIds") ?: return
 
-        val categories = categoryRepository.findAllById(distinctCategoryIds)
-        if (categories.size != distinctCategoryIds.size) {
+        val categories = categoryRepository.findAllById(parsedCategoryIds)
+        if (categories.size != parsedCategoryIds.size) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "존재하지 않는 카테고리 ID가 포함되어 있습니다.")
         }
 
         val posts = postRepository.findAllById(existingPostIds)
-        val newMappings = mutableListOf<PostCategory>()
-        for (post in posts) {
-            for (category in categories) {
-                newMappings.add(PostCategory.create(snowFlake.nextId(), post, category))
-            }
+        val newMappings = posts.flatMap { post ->
+            categories.map { category -> PostCategory.create(snowFlake.nextId(), post, category) }
         }
 
         postCategoryRepository.saveAll(newMappings)
