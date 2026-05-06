@@ -3,7 +3,7 @@ name: API CI/CD
 on:
   push:
     branches:
-      - development
+      - dev
       - cicd
     paths:
       - "api/**"
