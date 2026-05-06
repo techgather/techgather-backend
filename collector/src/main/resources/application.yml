@@ -16,7 +16,7 @@ collector:
     zone: "Asia/Seoul"
 
 target:
-  actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog
+  actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany
   entries:
     woowahan:
       url: https://techblog.woowahan.com/feed
@@ -212,6 +212,26 @@ target:
           defaultThumbnail: ""
     gaeraeblog:
       url: https://feeds.feedburner.com/gaeraeblog
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssV2Extractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    oliveyoung:
+      url: https://oliveyoung.tech/rss.xml
+      siteUrl: https://oliveyoung.tech
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssV2Extractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    gccompany:
+      url: https://techblog.gccompany.co.kr/feed
+      siteUrl: https://techblog.gccompany.co.kr
       adapter:
         crawler:
           type: htmlCrawler
