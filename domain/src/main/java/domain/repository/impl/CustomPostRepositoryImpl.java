@@ -131,7 +131,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
         if (sourceSiteNames == null || sourceSiteNames.isEmpty()) {
             return null;
         }
-        return post.sourceSiteName.lower().in(sourceSiteNames);
+        return post.sourceSiteName.in(sourceSiteNames);
     }
 
     private BooleanExpression hasCategories(List<String> categorySlugs) {

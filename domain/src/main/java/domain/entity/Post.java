@@ -8,15 +8,16 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 @Entity
 @Table(name = "post", indexes = {
 	@Index(name = "idx_post_url", columnList = "url", unique = true),
-	@Index(name = "idx_post_id", columnList = "postId"),
-	@Index(name = "idx_post_title", columnList = "title"),
 	@Index(name = "idx_post_source_site_name", columnList = "sourceSiteName"),
-	@Index(name = "idx_post_status_source", columnList = "status, sourceSiteName")
+	@Index(name = "idx_post_status_source", columnList = "status, sourceSiteName"),
+	@Index(name = "idx_post_status_pubdate_id", columnList = "status, pub_date, postId"),
+	@Index(name = "idx_post_status_lang_pubdate_id", columnList = "status, language, pub_date, postId")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -67,10 +68,17 @@ public class Post extends BaseTime {
 		post.url = url;
 		post.pubDate = pubDate;
 		post.thumbnail = thumbnail;
-		post.sourceSiteName = sourceSiteName;
+		post.sourceSiteName = normalizeSourceSiteName(sourceSiteName);
 		post.language = Language.fromCode(language);
 		post.status = PostStatus.NOT_PUBLISHED;
 		return post;
+	}
+
+	private static String normalizeSourceSiteName(String sourceSiteName) {
+		if (sourceSiteName == null) {
+			return null;
+		}
+		return sourceSiteName.trim().toLowerCase(Locale.ROOT);
 	}
 
 }
