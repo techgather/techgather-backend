@@ -33,8 +33,7 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
             "pub_date = VALUES(pub_date), " +
             "thumbnail = VALUES(thumbnail), " +
             "source_site_name = VALUES(source_site_name), " +
-            "language = VALUES(language), " +
-            "status = VALUES(status)";
+            "language = VALUES(language)";
     private static final String SELECT_SQL = "SELECT post_id, url FROM post WHERE url IN (%s)";
 
     @Override
