@@ -44,7 +44,8 @@ class PostService(
             keyword,
             normalizedCategorySlugs,
             normalizedSourceSiteNames,
-            requestedStatus
+            requestedStatus,
+            postSearchCondition.unclassified
         )
 
         val posts = when (parsedLastPostId) {
@@ -54,6 +55,7 @@ class PostService(
                 normalizedCategorySlugs,
                 normalizedSourceSiteNames,
                 requestedStatus,
+                postSearchCondition.unclassified,
                 limit + 1
             )
             else -> postRepository.searchPosts(
@@ -62,6 +64,7 @@ class PostService(
                 normalizedCategorySlugs,
                 normalizedSourceSiteNames,
                 requestedStatus,
+                postSearchCondition.unclassified,
                 cursorPubDate,
                 parsedLastPostId,
                 limit + 1

@@ -28,19 +28,19 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Post> searchPosts(Language language, String keyword, List<String> categorySlugs, List<String> sourceSiteNames, PostStatus status, Long limit) {
-        List<Long> postIds = findPostIds(language, keyword, categorySlugs, sourceSiteNames, status, null, null, limit);
+    public List<Post> searchPosts(Language language, String keyword, List<String> categorySlugs, List<String> sourceSiteNames, PostStatus status, Boolean unclassified, Long limit) {
+        List<Long> postIds = findPostIds(language, keyword, categorySlugs, sourceSiteNames, status, unclassified, null, null, limit);
         return findPostsWithTagsById(postIds);
     }
 
     @Override
-    public List<Post> searchPosts(Language language, String keyword, List<String> categorySlugs, List<String> sourceSiteNames, PostStatus status, LocalDateTime lastPubDate, Long lastPostId, Long limit) {
-        List<Long> postIds = findPostIds(language, keyword, categorySlugs, sourceSiteNames, status, lastPubDate, lastPostId, limit);
+    public List<Post> searchPosts(Language language, String keyword, List<String> categorySlugs, List<String> sourceSiteNames, PostStatus status, Boolean unclassified, LocalDateTime lastPubDate, Long lastPostId, Long limit) {
+        List<Long> postIds = findPostIds(language, keyword, categorySlugs, sourceSiteNames, status, unclassified, lastPubDate, lastPostId, limit);
         return findPostsWithTagsById(postIds);
     }
 
     @Override
-    public long countPosts(Language language, String keyword, List<String> categorySlugs, List<String> sourceSiteNames, PostStatus status) {
+    public long countPosts(Language language, String keyword, List<String> categorySlugs, List<String> sourceSiteNames, PostStatus status, Boolean unclassified) {
         JPAQuery<Long> query = queryFactory
                 .select(post.postId.countDistinct())
                 .from(post);
@@ -56,14 +56,15 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                         hasLanguage(language),
                         hasSourceSiteNames(sourceSiteNames),
                         matchesKeyword(keyword),
-                        hasCategories(categorySlugs)
+                        hasCategories(categorySlugs),
+                        hasNoCategory(unclassified)
                 )
                 .fetchOne();
 
         return count == null ? 0L : count;
     }
 
-    private List<Long> findPostIds(Language language, String keyword, List<String> categorySlugs, List<String> sourceSiteNames, PostStatus status, LocalDateTime cursorPubDate, Long cursorPostId, Long limit) {
+    private List<Long> findPostIds(Language language, String keyword, List<String> categorySlugs, List<String> sourceSiteNames, PostStatus status, Boolean unclassified, LocalDateTime cursorPubDate, Long cursorPostId, Long limit) {
         JPAQuery<Tuple> query = queryFactory
                 .select(post.postId, post.pubDate)
                 .from(post);
@@ -80,6 +81,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                         hasSourceSiteNames(sourceSiteNames),
                         matchesKeyword(keyword),
                         hasCategories(categorySlugs),
+                        hasNoCategory(unclassified),
                         afterCursor(cursorPubDate, cursorPostId)
                 )
                 .orderBy(post.pubDate.desc(), post.postId.desc())
@@ -139,5 +141,9 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
             return null;
         }
         return category.slug.in(categorySlugs);
+    }
+
+    private BooleanExpression hasNoCategory(Boolean unclassified) {
+        return Boolean.TRUE.equals(unclassified) ? post.postCategories.isEmpty() : null;
     }
 }
