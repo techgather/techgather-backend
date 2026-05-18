@@ -40,7 +40,8 @@ class AdminPostController(
             searchCondition.categorySlugs.isEmpty() -> searchCondition.copy(categorySlugs = null)
             else -> searchCondition
         }
-        val results = postService.getPosts(resolvedCondition, status, language, lastPostId, limit)
+        val resolvedStatus = if (searchCondition.categorySlugs == null && status == null) PostStatus.PUBLISHED else status
+        val results = postService.getPosts(resolvedCondition, resolvedStatus, language, lastPostId, limit)
         return PostResponseList.from(results)
     }
 
