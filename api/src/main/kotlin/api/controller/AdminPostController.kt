@@ -35,7 +35,12 @@ class AdminPostController(
         @RequestParam(defaultValue = "20") limit: Long,
         @RequestParam(required = false) language: Language?
     ): PostResponseList {
-        val results = postService.getPosts(searchCondition, status, language, lastPostId, limit)
+        val resolvedCondition = when {
+            searchCondition.categorySlugs == null -> searchCondition.copy(unclassified = true)
+            searchCondition.categorySlugs.isEmpty() -> searchCondition.copy(categorySlugs = null)
+            else -> searchCondition
+        }
+        val results = postService.getPosts(resolvedCondition, status, language, lastPostId, limit)
         return PostResponseList.from(results)
     }
 
