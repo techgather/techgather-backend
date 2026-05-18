@@ -34,4 +34,13 @@ public interface PostRepository extends JpaRepository<Post, Long>, CustomPostRep
             ORDER BY p.sourceSiteName ASC
             """)
     List<String> findDistinctSourceSiteNames(@Param("status") PostStatus status);
+
+    @Query("""
+            SELECT p FROM Post p
+            WHERE p.status = 'PUBLISHED'
+              AND NOT EXISTS (
+                  SELECT pc FROM PostCategory pc WHERE pc.post.postId = p.postId
+              )
+            """)
+    List<Post> findPublishedUnclassifiedPosts();
 }

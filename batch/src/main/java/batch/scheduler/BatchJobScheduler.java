@@ -1,5 +1,6 @@
 package batch.scheduler;
 
+import batch.service.PostClassifyService;
 import domain.entity.Post;
 import domain.repository.PostRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -26,13 +27,16 @@ public class BatchJobScheduler {
     private final JobLauncher jobLauncher;
     private final Job rssFeedsCollectJob;
     private final PostRepository postRepository;
+    private final PostClassifyService postClassifyService;
 
     public BatchJobScheduler(JobLauncher jobLauncher,
                              @Qualifier(RSS_COLLECT_JOB_NAME + "_job") Job rssFeedsCollectJob,
-                             PostRepository postRepository) {
+                             PostRepository postRepository,
+                             PostClassifyService postClassifyService) {
         this.jobLauncher = jobLauncher;
         this.rssFeedsCollectJob = rssFeedsCollectJob;
         this.postRepository = postRepository;
+        this.postClassifyService = postClassifyService;
     }
 
     @Scheduled(cron = "0 * * * * *")
@@ -48,6 +52,11 @@ public class BatchJobScheduler {
         } catch (Exception e) {
             log.error("Failed to run RSS Feeds Collect Job", e);
         }
+    }
+
+    @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
+    public void classifyUnclassifiedPosts() {
+        postClassifyService.classifyUnclassifiedPosts();
     }
 
     @Scheduled(cron = "0 0 0 * * *")
