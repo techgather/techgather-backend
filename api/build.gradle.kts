@@ -4,6 +4,8 @@ plugins {
 }
 
 dependencies {
+	implementation(libs.kotlin.reflect)
+
 	implementation(project(":domain"))
     implementation(project(":application"))
 
@@ -16,6 +18,7 @@ dependencies {
 	implementation(libs.springdoc.openapi.starter.webmvc.ui)
     implementation(libs.spring.boot.starter.security)
     testImplementation(libs.spring.security.test)
+    testImplementation(libs.kotlin.test.junit5)
 
 	implementation(libs.spring.cloud.aws.starter.parameter.store)
 	implementation(libs.aws.secretsmanager)
