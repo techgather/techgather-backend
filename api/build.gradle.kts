@@ -24,9 +24,6 @@ dependencies {
 	implementation(libs.aws.secretsmanager)
 
     runtimeOnly(libs.mysql.connector.j)
-
-    compileOnly(libs.lombok)
-    annotationProcessor(libs.lombok)
 }
 
 tasks.bootJar {

@@ -4,14 +4,12 @@ import application.exception.CommonServerErrorCode
 import application.exception.TechGatherException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import lombok.RequiredArgsConstructor
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Configuration
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest
 
 @Configuration
-@RequiredArgsConstructor
 class SecretsManagerConfig(
     private val secretsManagerClient: SecretsManagerClient,
     private val objectMapper: ObjectMapper
