@@ -1,5 +1,6 @@
 package domain.repository;
 
+import domain.constants.Language;
 import domain.constants.PostStatus;
 import domain.entity.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,9 +32,11 @@ public interface PostRepository extends JpaRepository<Post, Long>, CustomPostRep
             FROM Post p
             WHERE p.sourceSiteName IS NOT NULL
               AND (:status IS NULL OR p.status = :status)
+              AND p.language = :language
             ORDER BY p.sourceSiteName ASC
             """)
-    List<String> findDistinctSourceSiteNames(@Param("status") PostStatus status);
+    List<String> findDistinctSourceSiteNames(@Param("status") PostStatus status,
+                                             @Param("language") Language language);
 
     @Query("""
             SELECT p FROM Post p

@@ -112,13 +112,13 @@ class PostService(
     }
 
     @Transactional(readOnly = true)
-    fun getSourceSiteNamesForUser(): List<String> {
-        return postRepository.findDistinctSourceSiteNames(null)
+    fun getSourceSiteNamesForUser(language: Language?): List<String> {
+        return postRepository.findDistinctSourceSiteNames(null, language ?: Language.KO)
     }
 
     @Transactional(readOnly = true)
-    fun getSourceSiteNamesForAdmin(): List<String> {
-        return postRepository.findDistinctSourceSiteNames(null)
+    fun getSourceSiteNamesForAdmin(language: Language?): List<String> {
+        return postRepository.findDistinctSourceSiteNames(null, language ?: Language.KO)
     }
 
     private fun parseIds(ids: List<String>?, fieldName: String): List<Long>? {
