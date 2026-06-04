@@ -6,6 +6,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
@@ -18,6 +20,9 @@ class CollectorRunner(
     private val runProperties: CollectorRunProperties,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
+
+    // 공유 HttpClient 경합으로 인한 요청 타임아웃을 막기 위해 동시 실행 collector 수를 제한한다
+    private val concurrencyLimit = Semaphore(8)
 
     @EventListener(ApplicationReadyEvent::class)
     fun runAtStartup() {
@@ -45,15 +50,17 @@ class CollectorRunner(
             coroutineScope {
                 collectorRegistry.getCollectors().map { collector ->
                     async {
-                        runCatching { collector.collectWork() }
-                            .onFailure { e ->
-                                val rootCause = e.rootCause()
-                                if (rootCause is TLSException) {
-                                    log.warn("Collector skipped by TLS protocol mismatch. target={}, reason={}", collector.name, rootCause.message)
-                                } else {
-                                    log.error("Collector failed. target={}", collector.name, e)
+                        concurrencyLimit.withPermit {
+                            runCatching { collector.collectWork() }
+                                .onFailure { e ->
+                                    val rootCause = e.rootCause()
+                                    if (rootCause is TLSException) {
+                                        log.warn("Collector skipped by TLS protocol mismatch. target={}, reason={}", collector.name, rootCause.message)
+                                    } else {
+                                        log.error("Collector failed. target={}", collector.name, e)
+                                    }
                                 }
-                            }
+                        }
                     }
                 }.awaitAll()
             }
