@@ -34,13 +34,14 @@ class PostService(
         limit: Long
     ): PostResults {
         val requestedStatus = status ?: PostStatus.NOT_PUBLISHED
+        val requestedLanguage = language ?: Language.KO
         val parsedLastPostId = parseId(lastPostId, "lastPostId")
         val normalizedCategorySlugs = parseCategorySlugs(postSearchCondition.categorySlugs)
         val normalizedSourceSiteNames = parseSourceSiteNames(postSearchCondition.sourceSiteNames)
         val keyword = postSearchCondition.keyword?.trim()?.takeIf { it.isNotEmpty() }
         val cursorPubDate = resolveCursorPubDate(parsedLastPostId)
         val totalCount = postRepository.countPosts(
-            language,
+            requestedLanguage,
             keyword,
             normalizedCategorySlugs,
             normalizedSourceSiteNames,
@@ -50,7 +51,7 @@ class PostService(
 
         val posts = when (parsedLastPostId) {
             null -> postRepository.searchPosts(
-                language,
+                requestedLanguage,
                 keyword,
                 normalizedCategorySlugs,
                 normalizedSourceSiteNames,
@@ -59,7 +60,7 @@ class PostService(
                 limit + 1
             )
             else -> postRepository.searchPosts(
-                language,
+                requestedLanguage,
                 keyword,
                 normalizedCategorySlugs,
                 normalizedSourceSiteNames,
