@@ -1,49 +1,95 @@
 # CLAUDE.md
 
-Java/Spring Boot 백엔드 API 프로젝트를 위한 Claude Code 가이드.
-
-> **이 파일을 프로젝트에 맞게 커스터마이징하세요.** 특히 "프로젝트 개요"와 "아키텍처" 섹션.
+TechGather 백엔드 서비스를 위한 Claude Code 가이드.
 
 ## 프로젝트 개요
 
-<!-- TODO: 프로젝트 목적과 주요 도메인을 여기에 작성하세요 -->
-Spring Boot 기반 REST API 백엔드 서비스.
+기술 아티클 수집·분류·제공 플랫폼의 백엔드. Kotlin/Java 멀티모듈 구조로 수집(collector), 분류(batch), API 제공(api), 인증(authentication), 도메인(domain), 공통(application) 6개 모듈로 구성.
+
+**기술 스택**
+- Spring Boot 3.5.6 / Java 17 / Kotlin 2.1.0
+- MySQL (JPA + QueryDSL 5.0)
+- Kafka (수집 메시지 발행/소비)
+- Spring Batch (RSS 피드 분류 파이프라인)
+- Spring Security + OAuth2 Resource Server (JWT, AWS Cognito)
+- AWS Parameter Store, Secrets Manager
+- Ktor 3.3 (collector HTTP 클라이언트)
+- Lombok (Java 모듈), Snowflake ID
+
+## 모듈 구조
+
+| 모듈 | 언어 | 역할 |
+|------|------|------|
+| `api` | Kotlin | REST API 서버 (Spring Boot 실행) |
+| `authentication` | Java | OAuth2/Cognito 인증 서버 (Spring Boot 실행) |
+| `batch` | Java | Spring Batch + Kafka 소비 (RSS 분류) |
+| `collector` | Kotlin | RSS/HTML 수집 + Kafka 발행 (헥사고날 구조) |
+| `domain` | Java | JPA 엔티티 + QueryDSL 리포지토리 |
+| `application` | Java | 공통 예외, Snowflake ID 생성기 |
 
 ## 빌드 명령어
 
 ```bash
-# Gradle
-./gradlew compileJava             # 컴파일
-./gradlew test                    # 단위 테스트
-./gradlew check                   # 전체 테스트 + 린트
-./gradlew bootRun                 # 로컬 실행
-./gradlew jacocoTestReport        # 커버리지 리포트
+# 전체 빌드
+./gradlew build
+
+# 모듈별 실행 (api / authentication / batch / collector)
+./gradlew :api:bootRun
+./gradlew :authentication:bootRun
+./gradlew :batch:bootRun
+./gradlew :collector:bootRun
+
+# 테스트
+./gradlew test
+./gradlew :api:test
+
+# QueryDSL Q-class 생성 (domain 모듈)
+./gradlew :domain:compileJava
+
+# JAR 빌드
+./gradlew :api:bootJar
+./gradlew :collector:bootJar
 ```
 
 ## 아키텍처
 
-3계층 표준 아키텍처:
-
 ```
-Controller  →  Service  →  Repository  →  Database
-   (HTTP)    (Business)    (Data Access)
-```
+api/src/main/kotlin/api/
+├── controller/          # REST 컨트롤러
+│   └── dto/
+│       ├── request/     # 요청 DTO
+│       └── response/    # 응답 DTO
+├── service/             # 비즈니스 로직 (@Transactional)
+│   └── dto/result/      # 서비스 결과 DTO
+├── annotation/          # 커스텀 어노테이션 (@Role)
+├── aop/                 # AOP (RoleAspect)
+├── util/                # JWT 파싱 등 유틸
+└── global/
+    ├── config/          # Spring 설정 (Security, Swagger, RDS, AWS)
+    ├── exception/       # GlobalExceptionHandler, ApiErrorResponse
+    └── logging/         # 요청 로깅 필터
 
-```
-src/main/java/com/example/
-├── controller/      # REST 엔드포인트, 입력 검증
-├── service/         # 비즈니스 로직, 트랜잭션
-├── repository/      # Spring Data JPA 인터페이스
-├── domain/          # 엔티티, VO, 도메인 모델
-├── dto/             # 요청/응답 DTO (record 선호)
-├── exception/       # 도메인 예외, 글로벌 핸들러
-└── config/          # Spring 설정 클래스
+domain/src/main/java/domain/
+├── entity/              # JPA 엔티티 (Post, Category, Tag, User 등)
+├── repository/          # JPA 인터페이스 + QueryDSL Custom 인터페이스
+│   └── impl/            # QueryDSL 구현체 (CustomXxxRepositoryImpl)
+├── constants/           # Enum (PostStatus, Language, Role, AuthProvider)
+├── common/              # BaseTime (공통 감사 필드)
+├── config/              # QueryDSL 설정
+└── vo/                  # Value Object
 
-src/test/java/com/example/
-├── controller/      # @WebMvcTest
-├── service/         # @ExtendWith(MockitoExtension.class)
-├── repository/      # @DataJpaTest
-└── integration/     # @SpringBootTest
+collector/src/main/kotlin/collector/
+├── engine/              # 도메인 (CollectEngine, 포트 인터페이스)
+│   ├── command/         # 커맨드 객체
+│   ├── model/           # 도메인 모델
+│   └── port/            # 포트 인터페이스 (Crawler, Extractor, Publisher 등)
+├── adapter/             # 포트 구현체
+│   ├── crawler/         # jsoup HTML 크롤러
+│   ├── fetcher/         # Ktor HTTP 클라이언트
+│   ├── extractor/       # RSS/HTML 추출기
+│   ├── deduplicator/    # 중복 제거
+│   └── publisher/kafka/ # Kafka 발행
+└── worker/              # CollectorRunner, CollectorRegistry (Semaphore(8) 동시성 제한)
 ```
 
 ## 개발 워크플로우
@@ -66,6 +112,7 @@ src/test/java/com/example/
 | 커맨드 | 설명 |
 |--------|------|
 | `/dev` | 계획 → 구현 → 테스트 전체 워크플로우 |
+| `/dev init` | 프로젝트 분석 후 CLAUDE.md·rules 자동 커스터마이징 |
 | `/dev plan` | 코드베이스 분석 후 구현 계획서 작성 |
 | `/dev run` | 계획서 기반 코드 구현 및 검증 |
 | `/dev test` | TDD 워크플로우 (테스트 먼저 작성) |
@@ -107,8 +154,11 @@ src/test/java/com/example/
 2. **새 기능**: TDD 워크플로우 준수 (테스트 RED → 구현 GREEN → 리팩토링)
 3. **빌드 실패**: `java-build-resolver` 에이전트 사용, 증상 억제 금지
 4. **보안 코드**: `security-reviewer` 실행 필수 (인증/DB쿼리/파일처리)
-5. **커밋 전**: `./mvnw verify` 또는 `./gradlew check` 통과 확인
+5. **커밋 전**: `./gradlew check` 통과 확인
 6. **의존성 주입**: 필드 주입(`@Autowired`) 금지 — 생성자 주입 필수
+7. **ID 생성**: DB auto-increment 금지 — `SnowFlake.getInstance().nextId()` 사용
+8. **QueryDSL Q-class**: 새 엔티티 추가 후 `./gradlew :domain:compileJava` 실행 필수
+9. **동시 수집**: `CollectorRunner`의 `Semaphore(8)` 유지 — 임의로 제거하거나 상향 금지
 
 ## 스킬 참조
 
@@ -120,7 +170,6 @@ src/test/java/com/example/
 | TDD 패턴 | `springboot-tdd` |
 | 코딩 표준 | `java-coding-standards` |
 | DB 마이그레이션 | `database-migrations` |
-| PostgreSQL 쿼리/인덱스 | `postgres-patterns` |
-| 헥사고날 아키텍처 | `hexagonal-architecture` |
+| 헥사고날 아키텍처 (collector) | `hexagonal-architecture` |
 | REST API 설계 원칙 | `api-design` |
 | ADR 작성 | `architecture-decision-records` |

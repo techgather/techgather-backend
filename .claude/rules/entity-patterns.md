@@ -9,21 +9,34 @@ paths:
 
 ```java
 @Entity
-@Table(name = "foos")
+@Table(name = "post", indexes = {
+    @Index(name = "idx_post_status_lang", columnList = "status, language")
+})
 @Getter
-@Setter
-public class Foo extends BaseEntity {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Post extends BaseTime {
+
     @Id
-    @Column(name = "foo_id", length = 255)
-    private String id;
+    private Long postId;
+
+    @Enumerated(EnumType.STRING)
+    private PostStatus status;
+
+    public static Post create(Long postId, String title, ...) {
+        Post post = new Post();
+        post.postId = postId;
+        post.status = PostStatus.NOT_PUBLISHED;
+        return post;
+    }
 }
 ```
 
 ## ID
 
-- 타입: `String`
-- 생성: `UUID.randomUUID().toString().replace("-", "")` 또는 프로젝트 공통 ID 생성기 사용
-- DB auto-increment 사용 금지 — 서비스에서 생성 후 주입
+- 타입: `Long` (Snowflake)
+- 생성: `SnowFlake.getInstance().nextId()` — `application.generator.SnowFlake`
+- DB auto-increment 사용 금지
+- `@GeneratedValue` 사용 금지 — 서비스/팩토리에서 생성 후 주입
 
 ## Enum 컬럼
 

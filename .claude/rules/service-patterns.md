@@ -1,21 +1,39 @@
 ---
 paths:
   - "**/service/**/*.java"
+  - "**/service/**/*.kt"
 ---
 # Service 레이어 패턴
 
-## 클래스 구조
+api 모듈은 Kotlin, authentication/batch 모듈은 Java.
+
+## 클래스 구조 (Kotlin — api 모듈)
+
+```kotlin
+@Service
+class FooService(
+    private val fooRepository: FooRepository,
+    private val snowFlake: SnowFlake = SnowFlake.getInstance()
+) {
+    @Transactional(readOnly = true)
+    fun getFoos(language: Language?): List<Foo> { ... }
+
+    @Transactional
+    fun createFoo(request: CreateFooRequest): Foo { ... }
+}
+```
+
+## 클래스 구조 (Java — batch/authentication 모듈)
 
 ```java
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class FooService {
     private final FooRepository fooRepository;
 }
 ```
 
-모든 의존성은 `@RequiredArgsConstructor` + `private final`. `@Autowired` 사용 금지.
+모든 의존성은 생성자 주입. `@Autowired` 사용 금지.
 
 ## @Transactional
 
