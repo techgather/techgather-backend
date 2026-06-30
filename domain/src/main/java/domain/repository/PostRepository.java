@@ -3,6 +3,7 @@ package domain.repository;
 import domain.constants.Language;
 import domain.constants.PostStatus;
 import domain.entity.Post;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -46,4 +47,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, CustomPostRep
               )
             """)
     List<Post> findPublishedUnclassifiedPosts();
+
+    @Query("SELECT p FROM Post p WHERE p.status = :status ORDER BY p.pubDate ASC")
+    List<Post> findByStatusOrderByPubDateAsc(@Param("status") PostStatus status, Pageable pageable);
 }

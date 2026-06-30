@@ -6,3 +6,7 @@ spring:
     active: dev
   config:
     import: optional:application-secret.yml
+
+post:
+  release:
+    daily-count: 5

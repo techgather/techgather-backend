@@ -1,6 +1,7 @@
 package batch.scheduler;
 
 import batch.service.PostClassifyService;
+import batch.service.PostReleaseService;
 import domain.entity.Post;
 import domain.repository.PostRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -28,15 +29,18 @@ public class BatchJobScheduler {
     private final Job rssFeedsCollectJob;
     private final PostRepository postRepository;
     private final PostClassifyService postClassifyService;
+    private final PostReleaseService postReleaseService;
 
     public BatchJobScheduler(JobLauncher jobLauncher,
                              @Qualifier(RSS_COLLECT_JOB_NAME + "_job") Job rssFeedsCollectJob,
                              PostRepository postRepository,
-                             PostClassifyService postClassifyService) {
+                             PostClassifyService postClassifyService,
+                             PostReleaseService postReleaseService) {
         this.jobLauncher = jobLauncher;
         this.rssFeedsCollectJob = rssFeedsCollectJob;
         this.postRepository = postRepository;
         this.postClassifyService = postClassifyService;
+        this.postReleaseService = postReleaseService;
     }
 
     @Scheduled(cron = "0 * * * * *")
@@ -57,6 +61,11 @@ public class BatchJobScheduler {
     @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
     public void classifyUnclassifiedPosts() {
         postClassifyService.classifyUnclassifiedPosts();
+    }
+
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
+    public void releaseReservedPosts() {
+        postReleaseService.releaseReservedPosts();
     }
 
     @Scheduled(cron = "0 0 0 * * *")
