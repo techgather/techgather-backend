@@ -43,3 +43,6 @@ out/
 
 ### Logs ###
 logs/
+
+### Deployment scripts ###
+scripts/
