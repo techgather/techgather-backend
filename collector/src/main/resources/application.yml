@@ -1,25 +1,28 @@
 spring:
   config:
-    import: optional:application-secret.yml
+    import:
+      - optional:file:${TECHGATHER_SECRET_PATH:./config/application-secret.yml}
+      - optional:file:../config/application-secret.yml
+      - optional:file:/config/application-secret.yml
   kafka:
-    topic: post
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    topic: ${techgather.kafka.topic:post}
+    bootstrap-servers: ${techgather.kafka.bootstrap-servers:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: false
     properties:
-      security.protocol: SASL_PLAINTEXT
-      sasl.mechanism: SCRAM-SHA-512
-      sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_USERNAME}" password="${KAFKA_PASSWORD}";
+      security.protocol: ${techgather.kafka.security.protocol:SASL_PLAINTEXT}
+      sasl.mechanism: ${techgather.kafka.sasl.mechanism:SCRAM-SHA-512}
+      sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${techgather.kafka.username:}" password="${techgather.kafka.password:}";
 
 collector:
   run:
-    run-on-startup: true
-    scheduled-enabled: false
-    cron: "0 0 3 * * *"
-    zone: "Asia/Seoul"
+    run-on-startup: ${techgather.collector.run.run-on-startup:true}
+    scheduled-enabled: ${techgather.collector.run.scheduled-enabled:false}
+    cron: ${techgather.collector.run.cron:0 0 3 * * *}
+    zone: ${techgather.collector.run.zone:Asia/Seoul}
 
 target:
   actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany,aws,cloudflare,netflix,stripe,figma,discord,meta,slack,github

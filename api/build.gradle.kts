@@ -20,9 +20,6 @@ dependencies {
     testImplementation(libs.spring.security.test)
     testImplementation(libs.kotlin.test.junit5)
 
-	implementation(libs.spring.cloud.aws.starter.parameter.store)
-	implementation(libs.aws.secretsmanager)
-
     runtimeOnly(libs.mysql.connector.j)
 }
 
@@ -33,4 +30,3 @@ tasks.bootJar {
 tasks.jar {
 	enabled = false
 }
-
