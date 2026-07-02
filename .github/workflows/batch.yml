@@ -1,0 +1,63 @@
+name: Batch CI/CD
+
+on:
+  push:
+    branches:
+      - dev
+      - cicd
+    paths:
+      - "batch/**"
+      - "application/**"
+      - "domain/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle/**"
+      - "gradlew"
+      - "gradlew.bat"
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      ECR_REPOSITORY: tg-dev
+      SERVICE_NAME: tg-batch-dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker Image
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :batch:bootJar
+
+          REGISTRY="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com"
+          REPOSITORY="${{ env.ECR_REPOSITORY }}/${{ env.SERVICE_NAME }}"
+          IMAGE_TAG="latest"
+
+          FULL_PATH=$(echo "$REGISTRY/$REPOSITORY:$IMAGE_TAG" | tr '[:upper:]' '[:lower:]')
+
+          docker build -t "$FULL_PATH" -f ./batch/Dockerfile ./batch
+          docker push "$FULL_PATH"
+
+      - name: Execute Remote Deployment Script
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.TG_PROD_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.TG_PROD_SERVER_SSH_KEY }}
+          script: |
+            echo "Starting Batch deployment script..."
+            cd ~/app/scripts
+            ./batch-deploy.sh

@@ -43,7 +43,8 @@ class CollectorRunner(
     private fun runCollectors() {
         runBlocking {
             coroutineScope {
-                collectorRegistry.getCollectors().map { collector ->
+                val collectors = collectorRegistry.getCollectors()
+                collectors.map { collector ->
                     async {
                         runCatching { collector.collectWork() }
                             .onFailure { e ->
@@ -56,6 +57,7 @@ class CollectorRunner(
                             }
                     }
                 }.awaitAll()
+                log.info("All collectors finished. total={}", collectors.size)
             }
         }
     }

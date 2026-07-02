@@ -1,22 +1,31 @@
 spring:
+  config:
+    import:
+      - optional:file:${TECHGATHER_SECRET_PATH:./config/application-secret.yml}
+      - optional:file:../config/application-secret.yml
+      - optional:file:/config/application-secret.yml
   kafka:
-    topic: post
-    bootstrap-servers: localhost:9092
+    topic: ${techgather.kafka.topic:post}
+    bootstrap-servers: ${techgather.kafka.bootstrap-servers:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: false
+    properties:
+      security.protocol: ${techgather.kafka.security.protocol:SASL_PLAINTEXT}
+      sasl.mechanism: ${techgather.kafka.sasl.mechanism:SCRAM-SHA-512}
+      sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${techgather.kafka.username:}" password="${techgather.kafka.password:}";
 
 collector:
   run:
-    run-on-startup: true
-    scheduled-enabled: false
-    cron: "0 0 3 * * *"
-    zone: "Asia/Seoul"
+    run-on-startup: ${techgather.collector.run.run-on-startup:true}
+    scheduled-enabled: ${techgather.collector.run.scheduled-enabled:false}
+    cron: ${techgather.collector.run.cron:0 0 3 * * *}
+    zone: ${techgather.collector.run.zone:Asia/Seoul}
 
 target:
-  actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany
+  actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany,aws,cloudflare,netflix,stripe,figma,discord,meta,slack,github
   entries:
     woowahan:
       url: https://techblog.woowahan.com/feed
@@ -232,6 +241,105 @@ target:
     gccompany:
       url: https://techblog.gccompany.co.kr/feed
       siteUrl: https://techblog.gccompany.co.kr
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssV2Extractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    aws:
+      url: https://aws.amazon.com/blogs/architecture/feed/
+      siteUrl: https://aws.amazon.com/blogs/architecture/
+      language: EN
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssV2Extractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    cloudflare:
+      url: https://blog.cloudflare.com/rss/
+      siteUrl: https://blog.cloudflare.com
+      language: EN
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssV2Extractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    netflix:
+      url: https://medium.com/feed/netflix-techblog
+      siteUrl: https://netflixtechblog.com
+      language: EN
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssV2Extractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    stripe:
+      url: https://stripe.com/blog/feed.rss
+      siteUrl: https://stripe.com/blog
+      language: EN
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssV2Extractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    figma: # atom 포맷
+      url: https://www.figma.com/blog/feed/atom.xml
+      siteUrl: https://www.figma.com/blog
+      language: EN
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: atomExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    discord:
+      url: https://discord.com/blog/rss.xml
+      siteUrl: https://discord.com/blog
+      language: EN
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssV2Extractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    meta:
+      url: https://engineering.fb.com/feed/
+      siteUrl: https://engineering.fb.com
+      language: EN
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssV2Extractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    slack:
+      url: https://slack.engineering/feed/
+      siteUrl: https://slack.engineering
+      language: EN
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: rssV2Extractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
+    github:
+      url: https://github.blog/engineering/feed/
+      siteUrl: https://github.blog/engineering/
+      language: EN
       adapter:
         crawler:
           type: htmlCrawler

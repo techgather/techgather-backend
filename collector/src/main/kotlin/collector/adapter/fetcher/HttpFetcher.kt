@@ -8,12 +8,17 @@ import io.ktor.network.tls.TLSException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.springframework.stereotype.Component
 import java.security.cert.X509Certificate
 import javax.net.ssl.X509TrustManager
 
 @Component
 class HttpFetcher: Fetcher {
+
+    // 피드+썸네일 등 전체 HTTP 요청 총량을 제한해 공유 CIO 엔진/대상 서버 과부하를 방지한다
+    private val requestLimiter = Semaphore(20)
 
     private val client = HttpClient(CIO) {
         expectSuccess = false
@@ -41,8 +46,8 @@ class HttpFetcher: Fetcher {
         }.awaitAll()
     }
 
-    override suspend fun fetch(url: String): String {
-        return try {
+    override suspend fun fetch(url: String): String = requestLimiter.withPermit {
+        try {
             val response: HttpResponse = client.get(url)
             response.bodyAsText()
         } catch (e: TLSException) {

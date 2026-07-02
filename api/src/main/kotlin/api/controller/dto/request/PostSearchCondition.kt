@@ -10,4 +10,6 @@ data class PostSearchCondition(
     val categorySlugs: List<String>? = null,
 
     val sourceSiteNames: List<String>? = null,
+
+    val unclassified: Boolean? = null,
 )

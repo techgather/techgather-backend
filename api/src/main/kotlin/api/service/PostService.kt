@@ -34,34 +34,38 @@ class PostService(
         limit: Long
     ): PostResults {
         val requestedStatus = status ?: PostStatus.NOT_PUBLISHED
+        val requestedLanguage = language ?: Language.KO
         val parsedLastPostId = parseId(lastPostId, "lastPostId")
         val normalizedCategorySlugs = parseCategorySlugs(postSearchCondition.categorySlugs)
         val normalizedSourceSiteNames = parseSourceSiteNames(postSearchCondition.sourceSiteNames)
         val keyword = postSearchCondition.keyword?.trim()?.takeIf { it.isNotEmpty() }
         val cursorPubDate = resolveCursorPubDate(parsedLastPostId)
         val totalCount = postRepository.countPosts(
-            language,
+            requestedLanguage,
             keyword,
             normalizedCategorySlugs,
             normalizedSourceSiteNames,
-            requestedStatus
+            requestedStatus,
+            postSearchCondition.unclassified
         )
 
         val posts = when (parsedLastPostId) {
             null -> postRepository.searchPosts(
-                language,
+                requestedLanguage,
                 keyword,
                 normalizedCategorySlugs,
                 normalizedSourceSiteNames,
                 requestedStatus,
+                postSearchCondition.unclassified,
                 limit + 1
             )
             else -> postRepository.searchPosts(
-                language,
+                requestedLanguage,
                 keyword,
                 normalizedCategorySlugs,
                 normalizedSourceSiteNames,
                 requestedStatus,
+                postSearchCondition.unclassified,
                 cursorPubDate,
                 parsedLastPostId,
                 limit + 1
@@ -109,13 +113,13 @@ class PostService(
     }
 
     @Transactional(readOnly = true)
-    fun getSourceSiteNamesForUser(): List<String> {
-        return postRepository.findDistinctSourceSiteNames(null)
+    fun getSourceSiteNamesForUser(language: Language?): List<String> {
+        return postRepository.findDistinctSourceSiteNames(null, language ?: Language.KO)
     }
 
     @Transactional(readOnly = true)
-    fun getSourceSiteNamesForAdmin(): List<String> {
-        return postRepository.findDistinctSourceSiteNames(null)
+    fun getSourceSiteNamesForAdmin(language: Language?): List<String> {
+        return postRepository.findDistinctSourceSiteNames(null, language ?: Language.KO)
     }
 
     private fun parseIds(ids: List<String>?, fieldName: String): List<Long>? {

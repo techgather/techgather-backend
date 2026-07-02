@@ -4,3 +4,57 @@ server:
 spring:
   profiles:
     active: dev
+  config:
+    import:
+      - optional:file:${TECHGATHER_SECRET_PATH:./config/application-secret.yml}
+      - optional:file:../config/application-secret.yml
+      - optional:file:/config/application-secret.yml
+  datasource:
+    url: ${techgather.datasource.url}
+    username: ${techgather.datasource.username}
+    password: ${techgather.datasource.password}
+    driver-class-name: ${techgather.datasource.driver-class-name:com.mysql.cj.jdbc.Driver}
+    hikari:
+      maximum-pool-size: ${techgather.datasource.hikari.maximum-pool-size:10}
+  jpa:
+    database-platform: ${techgather.jpa.database-platform:org.hibernate.dialect.MySQLDialect}
+    hibernate:
+      ddl-auto: ${techgather.jpa.hibernate.ddl-auto:update}
+    show-sql: ${techgather.jpa.show-sql:false}
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: ${techgather.jpa.hibernate.jdbc.batch-size:100}
+          fetch_size: ${techgather.jpa.hibernate.jdbc.fetch-size:100}
+        order_inserts: ${techgather.jpa.hibernate.order-inserts:true}
+        order_updates: ${techgather.jpa.hibernate.order-updates:true}
+        format_sql: ${techgather.jpa.hibernate.format-sql:false}
+        batch_versioned_data: ${techgather.jpa.hibernate.batch-versioned-data:true}
+        generate_statistics: ${techgather.jpa.hibernate.generate-statistics:false}
+  kafka:
+    bootstrap-servers: ${techgather.kafka.bootstrap-servers:localhost:9092}
+    consumer:
+      topic: ${techgather.kafka.topic:post}
+      group-id: ${techgather.kafka.consumer.group-id:techgather-batch}
+      poll-timeout: ${techgather.kafka.consumer.poll-timeout:5000}
+      max-empty-polls: ${techgather.kafka.consumer.max-empty-polls:3}
+      auto-offset-reset: ${techgather.kafka.consumer.auto-offset-reset:earliest}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    properties:
+      security.protocol: ${techgather.kafka.security.protocol:}
+      sasl.mechanism: ${techgather.kafka.sasl.mechanism:}
+      sasl.jaas.config: ${techgather.kafka.sasl.jaas-config:}
+  batch:
+    chunk:
+      size: ${techgather.batch.chunk.size:100}
+    job:
+      enabled: ${techgather.batch.job.enabled:true}
+    jdbc:
+      initialize-schema: ${techgather.batch.jdbc.initialize-schema:always}
+post:
+  release:
+    daily-count: ${techgather.post.release.daily-count:5}

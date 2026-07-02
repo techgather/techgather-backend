@@ -3,6 +3,7 @@ dependencies {
     implementation libs.bundles.spring.batch
     implementation libs.spring.boot.starter.web
     implementation libs.spring.boot.starter.data.jpa
+    testImplementation libs.spring.boot.starter.test
     testImplementation libs.spring.batch.test
     testImplementation libs.spring.kafka.test
 
@@ -14,9 +15,6 @@ dependencies {
     annotationProcessor libs.lombok
 
     runtimeOnly libs.mysql.connector.j
-
-    implementation("io.awspring.cloud:spring-cloud-aws-starter-parameter-store:3.4.2")
-    implementation("software.amazon.awssdk:secretsmanager:2.40.16")
 
     implementation project(':domain')
     implementation project(':application')

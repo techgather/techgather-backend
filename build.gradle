@@ -34,16 +34,8 @@ allprojects {
 
 	dependencies {
 		implementation libs.spring.boot.starter
-		implementation libs.kotlin.reflect
 		testImplementation libs.spring.boot.starter.test
-		testImplementation libs.kotlin.test.junit5
 		testRuntimeOnly libs.junit.platform.launcher
-	}
-
-	pluginManager.withPlugin('org.jetbrains.kotlin.jvm') {
-		kotlin {
-			jvmToolchain(17)
-		}
 	}
 
 	pluginManager.withPlugin('org.jetbrains.kotlin.jvm') {

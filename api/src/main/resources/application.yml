@@ -4,7 +4,26 @@ server:
 spring:
   profiles:
     active: dev
-
+  config:
+    import:
+      - optional:file:${TECHGATHER_SECRET_PATH:./config/application-secret.yml}
+      - optional:file:../config/application-secret.yml
+      - optional:file:/config/application-secret.yml
+  datasource:
+    url: ${techgather.datasource.url}
+    username: ${techgather.datasource.username}
+    password: ${techgather.datasource.password}
+    driver-class-name: ${techgather.datasource.driver-class-name:com.mysql.cj.jdbc.Driver}
+    hikari:
+      maximum-pool-size: ${techgather.datasource.hikari.maximum-pool-size:10}
+  jpa:
+    database-platform: ${techgather.jpa.database-platform:org.hibernate.dialect.MySQLDialect}
+    hibernate:
+      ddl-auto: ${techgather.jpa.hibernate.ddl-auto:update}
+    properties:
+      hibernate:
+        format_sql: ${techgather.jpa.hibernate.format-sql:true}
+        show_sql: ${techgather.jpa.hibernate.show-sql:true}
 springdoc:
   api-docs:
     path: /v3/api-docs

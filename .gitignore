@@ -40,3 +40,9 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Logs ###
+logs/
+
+### Deployment scripts ###
+scripts/

@@ -35,7 +35,12 @@ class AdminPostController(
         @RequestParam(defaultValue = "20") limit: Long,
         @RequestParam(required = false) language: Language?
     ): PostResponseList {
-        val results = postService.getPosts(searchCondition, status, language, lastPostId, limit)
+        val resolvedCondition = when {
+            searchCondition.categorySlugs == null -> searchCondition.copy(unclassified = true)
+            searchCondition.categorySlugs.isEmpty() -> searchCondition.copy(categorySlugs = null)
+            else -> searchCondition
+        }
+        val results = postService.getPosts(resolvedCondition, status, language, lastPostId, limit)
         return PostResponseList.from(results)
     }
 
@@ -51,8 +56,10 @@ class AdminPostController(
     @GetMapping("/source-sites")
     @ResponseStatus(code = HttpStatus.OK)
     @Operation(summary = "관리자 소스 사이트 목록 조회", operationId = "a3-post-sources")
-    fun getSourceSites(): List<String> {
-        return postService.getSourceSiteNamesForAdmin()
+    fun getSourceSites(
+        @RequestParam(required = false) language: Language?
+    ): List<String> {
+        return postService.getSourceSiteNamesForAdmin(language)
     }
 
 }

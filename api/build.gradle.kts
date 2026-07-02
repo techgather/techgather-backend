@@ -4,6 +4,8 @@ plugins {
 }
 
 dependencies {
+	implementation(libs.kotlin.reflect)
+
 	implementation(project(":domain"))
     implementation(project(":application"))
 
@@ -16,14 +18,9 @@ dependencies {
 	implementation(libs.springdoc.openapi.starter.webmvc.ui)
     implementation(libs.spring.boot.starter.security)
     testImplementation(libs.spring.security.test)
-
-	implementation(libs.spring.cloud.aws.starter.parameter.store)
-	implementation(libs.aws.secretsmanager)
+    testImplementation(libs.kotlin.test.junit5)
 
     runtimeOnly(libs.mysql.connector.j)
-
-    compileOnly(libs.lombok)
-    annotationProcessor(libs.lombok)
 }
 
 tasks.bootJar {
@@ -33,4 +30,3 @@ tasks.bootJar {
 tasks.jar {
 	enabled = false
 }
-

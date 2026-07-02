@@ -38,8 +38,10 @@ class PostController(
     @GetMapping("/source-sites")
     @ResponseStatus(code = HttpStatus.OK)
     @Operation(summary = "소스 사이트 목록 조회", operationId = "u2-post-sources")
-    fun getSourceSites(): List<String> {
-        return postService.getSourceSiteNamesForUser()
+    fun getSourceSites(
+        @RequestParam(required = false) language: Language?
+    ): List<String> {
+        return postService.getSourceSiteNamesForUser(language)
     }
 
 }
