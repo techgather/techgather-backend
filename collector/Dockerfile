@@ -1,30 +1,14 @@
-# 빌드 스테이지
 FROM eclipse-temurin:17-jdk AS build
+WORKDIR collector
+ARG JAR_FILE=build/libs/*.jar
+COPY ${JAR_FILE} collector.jar
+RUN java -Djarmode=layertools -jar collector.jar extract
 
-WORKDIR /app
-
-# 루트에 있는 Gradle 관련 파일들 복사
-COPY gradlew .
-COPY gradle gradle
-#있으면 복사, 없으면 무시
-COPY settings.gradle* build.gradle* ./
-
-# 실행 권한 필수
-RUN chmod +x gradlew
-
-# 소스 복사
-COPY . .
-
-#gradlew build
-RUN ./gradlew :collector:bootJar -x test --no-daemon
-
-# 런타임 스테이지
 FROM eclipse-temurin:17-jre AS runtime
-WORKDIR /app
-
-# 빌드된 JAR 복사
-COPY --from=build /app/collector/build/libs/*.jar app.jar
-
-# 포트 EXPOSE 없음
-ENTRYPOINT ["java", "-Dspring.profiles.active=docker", "-jar", "/app/app.jar"]
-
+WORKDIR collector
+COPY --from=build collector/dependencies/ ./
+COPY --from=build collector/spring-boot-loader/ ./
+COPY --from=build collector/snapshot-dependencies/ ./
+RUN true
+COPY --from=build collector/application/ ./
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
