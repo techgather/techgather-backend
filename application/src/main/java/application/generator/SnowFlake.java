@@ -3,7 +3,7 @@ package application.generator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-import java.util.random.RandomGenerator;
+import java.util.concurrent.ThreadLocalRandom;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SnowFlake {
@@ -18,7 +18,7 @@ public final class SnowFlake {
 
 	private static final SnowFlake INSTANCE = new SnowFlake();
 
-	private final long nodeId = RandomGenerator.getDefault().nextLong(maxNodeId + 1);
+	private final long nodeId = ThreadLocalRandom.current().nextLong(maxNodeId + 1);
 	private final long startTimeMillis = 1704067200000L;
 
 	private long lastTimeMillis = startTimeMillis - 1;
