@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component
 class CollectorRunner(
     private val collectorRegistry: CollectorRegistry,
     private val runProperties: CollectorRunProperties,
+    private val batchJobTriggerClient: BatchJobTriggerClient,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -58,6 +59,7 @@ class CollectorRunner(
                     }
                 }.awaitAll()
                 log.info("All collectors finished. total={}", collectors.size)
+                batchJobTriggerClient.triggerPostIngest()
             }
         }
     }

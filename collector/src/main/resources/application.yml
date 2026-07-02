@@ -19,10 +19,15 @@ spring:
 
 collector:
   run:
-    run-on-startup: ${techgather.collector.run.run-on-startup:true}
-    scheduled-enabled: ${techgather.collector.run.scheduled-enabled:false}
+    run-on-startup: ${techgather.collector.run.run-on-startup:false}
+    scheduled-enabled: ${techgather.collector.run.scheduled-enabled:true}
     cron: ${techgather.collector.run.cron:0 0 3 * * *}
     zone: ${techgather.collector.run.zone:Asia/Seoul}
+  batch-job:
+    enabled: ${techgather.collector.batch-job.enabled:true}
+    post-ingest-url: ${techgather.collector.batch-job.post-ingest-url:http://localhost:7500/internal/jobs/post-ingest}
+    token: ${techgather.internal.job-token:}
+    timeout-millis: ${techgather.collector.batch-job.timeout-millis:60000}
 
 target:
   actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany,aws,cloudflare,netflix,stripe,figma,discord,meta,slack,github

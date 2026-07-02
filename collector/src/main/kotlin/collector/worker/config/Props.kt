@@ -16,6 +16,14 @@ class CollectorRunProperties(
     var zone: String = "Asia/Seoul",
 )
 
+@ConfigurationProperties(prefix = "collector.batch-job")
+class BatchJobTriggerProperties(
+    var enabled: Boolean = true,
+    var postIngestUrl: String = "http://localhost:7500/internal/jobs/post-ingest",
+    var token: String = "",
+    var timeoutMillis: Long = 60000,
+)
+
 data class TargetProps(
     var url: String = "",
     var siteUrl: String = "",

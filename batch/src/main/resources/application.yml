@@ -55,6 +55,11 @@ spring:
       enabled: ${techgather.batch.job.enabled:true}
     jdbc:
       initialize-schema: ${techgather.batch.jdbc.initialize-schema:always}
+    schedule:
+      release-cron: ${techgather.batch.schedule.release-cron:0 0 0 * * *}
+      zone: ${techgather.batch.schedule.zone:Asia/Seoul}
+internal:
+  job-token: ${techgather.internal.job-token:}
 post:
   release:
     daily-count: ${techgather.post.release.daily-count:5}
