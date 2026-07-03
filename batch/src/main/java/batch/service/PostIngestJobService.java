@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import static batch.constants.BatchConstants.RSS_COLLECT_JOB_NAME;
 
@@ -37,10 +38,11 @@ public class PostIngestJobService {
 
         JobExecution jobExecution = jobLauncher.run(rssFeedsCollectJob, jobParameters);
         BatchStatus jobStatus = jobExecution.getStatus();
+        PostIngestResult result = toResult(jobExecution, false);
 
         if (jobStatus != BatchStatus.COMPLETED) {
-            log.warn("[스케줄] Kafka 게시글 적재 job 비정상 종료. status={}", jobStatus);
-            return new PostIngestResult(jobExecution.getJobId(), jobExecution.getId(), jobStatus.name(), false);
+            log.warn("[스케줄] Kafka 게시글 적재 job 비정상 종료. result={}", result);
+            return result;
         }
 
         log.info("[스케줄] Kafka 게시글 적재 job 종료");
@@ -48,9 +50,58 @@ public class PostIngestJobService {
         postClassifyService.classifyUnclassifiedPosts();
         log.info("[스케줄] 게시글 분류 종료");
 
-        return new PostIngestResult(jobExecution.getJobId(), jobExecution.getId(), jobStatus.name(), true);
+        return toResult(jobExecution, true);
     }
 
-    public record PostIngestResult(Long jobId, Long jobExecutionId, String jobStatus, boolean classified) {
+    private PostIngestResult toResult(JobExecution jobExecution, boolean classified) {
+        List<StepResult> steps = jobExecution.getStepExecutions().stream()
+                .map(step -> new StepResult(
+                        step.getStepName(),
+                        step.getStatus().name(),
+                        step.getExitStatus().getExitCode(),
+                        step.getReadCount(),
+                        step.getWriteCount(),
+                        step.getCommitCount(),
+                        step.getRollbackCount()
+                ))
+                .toList();
+
+        List<String> failureMessages = jobExecution.getAllFailureExceptions().stream()
+                .map(Throwable::toString)
+                .toList();
+
+        return new PostIngestResult(
+                jobExecution.getJobId(),
+                jobExecution.getId(),
+                jobExecution.getStatus().name(),
+                jobExecution.getExitStatus().getExitCode(),
+                jobExecution.getExitStatus().getExitDescription(),
+                classified,
+                steps,
+                failureMessages
+        );
+    }
+
+    public record PostIngestResult(
+            Long jobId,
+            Long jobExecutionId,
+            String jobStatus,
+            String exitCode,
+            String exitDescription,
+            boolean classified,
+            List<StepResult> steps,
+            List<String> failureMessages
+    ) {
+    }
+
+    public record StepResult(
+            String stepName,
+            String status,
+            String exitCode,
+            long readCount,
+            long writeCount,
+            long commitCount,
+            long rollbackCount
+    ) {
     }
 }

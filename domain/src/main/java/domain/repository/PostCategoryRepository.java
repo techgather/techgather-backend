@@ -9,5 +9,7 @@ public interface PostCategoryRepository extends JpaRepository<PostCategory, Long
 
     List<PostCategory> findAllByPostPostIdInAndCategoryIdIn(List<Long> postIds, List<Long> categoryIds);
 
+    boolean existsByPostPostIdAndCategoryId(Long postId, Long categoryId);
+
     void deleteAllByPostPostIdIn(List<Long> postIds);
 }

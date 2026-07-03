@@ -95,6 +95,7 @@ class PostService(
         }
 
         postCategoryRepository.deleteAllByPostPostIdIn(existingPostIds)
+        postCategoryRepository.flush()
 
         // categoryIds가 빈 리스트면 카테고리 전체 제거 후 종료
         val parsedCategoryIds = parseIds(categoryIds, "categoryIds") ?: return

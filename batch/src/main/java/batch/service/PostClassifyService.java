@@ -117,6 +117,9 @@ public class PostClassifyService {
             if (category.isEmpty()) {
                 continue;
             }
+            if (postCategoryRepository.existsByPostPostIdAndCategoryId(post.getPostId(), category.get().getId())) {
+                continue;
+            }
             postCategoryRepository.save(PostCategory.create(snowFlake.nextId(), post, category.get()));
             classified++;
         }

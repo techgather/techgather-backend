@@ -4,6 +4,7 @@ import collector.worker.config.BatchJobTriggerProperties
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.statement.bodyAsText
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import jakarta.annotation.PreDestroy
@@ -35,11 +36,12 @@ class BatchJobTriggerClient(
             }
         }
 
+        val responseBody = response.bodyAsText()
         if (response.status.value !in 200..299) {
-            error("Batch post-ingest trigger failed. status=${response.status.value}")
+            error("Batch post-ingest trigger failed. status=${response.status.value}, body=$responseBody")
         }
 
-        log.info("Batch post-ingest trigger completed. status={}", response.status.value)
+        log.info("Batch post-ingest trigger completed. status={}, body={}", response.status.value, responseBody)
     }
 
     @PreDestroy
