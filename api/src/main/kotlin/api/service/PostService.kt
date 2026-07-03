@@ -90,15 +90,13 @@ class PostService(
         val existingPostIds = postRepository.findPostByPostIdIn(parsedPostIds)
         postRepository.updateStatusByPostId(existingPostIds, status)
 
-        if (categoryIds == null || existingPostIds.isEmpty()) {
+        val parsedCategoryIds = parseIds(categoryIds, "categoryIds")
+        if (parsedCategoryIds.isNullOrEmpty() || existingPostIds.isEmpty()) {
             return
         }
 
         postCategoryRepository.deleteAllByPostPostIdIn(existingPostIds)
         postCategoryRepository.flush()
-
-        // categoryIds가 빈 리스트면 카테고리 전체 제거 후 종료
-        val parsedCategoryIds = parseIds(categoryIds, "categoryIds") ?: return
 
         val categories = categoryRepository.findAllById(parsedCategoryIds)
         if (categories.size != parsedCategoryIds.size) {
