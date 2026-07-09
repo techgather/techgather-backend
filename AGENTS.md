@@ -9,7 +9,7 @@ This is a Spring Boot multi-module Gradle repository for tech blog aggregation.
 - `batch/`: Java Spring Batch/Kafka consumer that writes posts and tags to MySQL.
 - `domain/`: Java JPA entities, repositories, QueryDSL custom queries, shared data model.
 - `application/`: Java shared exceptions, error codes, roles, and SnowFlake ID generation.
-- `authentication/`: Java OAuth2/OIDC authentication service using AWS Cognito.
+- `authentication/`: Java authentication service reserved for future direct OAuth integration.
 
 Tests live under each module’s `src/test`. QueryDSL Q-classes under `build/generated/` must not be committed.
 

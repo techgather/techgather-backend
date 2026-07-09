@@ -10,8 +10,8 @@ TechGather 백엔드 서비스를 위한 Claude Code 가이드.
 - Spring Boot 3.5.6 / Java 17 / Kotlin 2.1.0
 - MySQL (JPA + QueryDSL 5.0)
 - Kafka (수집 메시지 발행/소비)
-- Spring Batch (RSS 피드 분류 파이프라인)
-- Spring Security + OAuth2 Resource Server (JWT, AWS Cognito)
+- Spring Batch (RSS 피드 적재/공개 파이프라인)
+- Spring Security
 - AWS Parameter Store, Secrets Manager
 - Ktor 3.3 (collector HTTP 클라이언트)
 - Lombok (Java 모듈), Snowflake ID
@@ -21,8 +21,8 @@ TechGather 백엔드 서비스를 위한 Claude Code 가이드.
 | 모듈 | 언어 | 역할 |
 |------|------|------|
 | `api` | Kotlin | REST API 서버 (Spring Boot 실행) |
-| `authentication` | Java | OAuth2/Cognito 인증 서버 (Spring Boot 실행) |
-| `batch` | Java | Spring Batch + Kafka 소비 (RSS 분류) |
+| `authentication` | Java | 추후 직접 OAuth 연동을 위한 인증 서버 (Spring Boot 실행) |
+| `batch` | Java | Spring Batch + Kafka 소비 (RSS 적재/공개) |
 | `collector` | Kotlin | RSS/HTML 수집 + Kafka 발행 (헥사고날 구조) |
 | `domain` | Java | JPA 엔티티 + QueryDSL 리포지토리 |
 | `application` | Java | 공통 예외, Snowflake ID 생성기 |
