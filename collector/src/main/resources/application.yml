@@ -79,7 +79,6 @@ target:
           defaultThumbnail: ""
 #    kakao: 미수집 (블로그 운영 중단 - 마지막 포스팅 2023-05-19)
 #      url: https://tech.kakaoenterprise.com/feed
-#      siteUrl: https://tech.kakaoenterprise.com
 #      adapter:
 #        crawler:
 #          type: htmlCrawler
@@ -89,7 +88,6 @@ target:
 #          defaultThumbnail: ""
     kakao:
       url: https://tech.kakao.com/feed
-      siteUrl: https://tech.kakao.com
       adapter:
         crawler:
           type: htmlCrawler
@@ -99,7 +97,6 @@ target:
           defaultThumbnail: ""
     kakao-pay:
       url: https://tech.kakaopay.com/rss
-      siteUrl: https://tech.kakaopay.com
       adapter:
         crawler:
           type: htmlCrawler
@@ -235,7 +232,6 @@ target:
           defaultThumbnail: ""
     oliveyoung:
       url: https://oliveyoung.tech/rss.xml
-      siteUrl: https://oliveyoung.tech
       adapter:
         crawler:
           type: htmlCrawler
@@ -245,7 +241,6 @@ target:
           defaultThumbnail: ""
     gccompany:
       url: https://techblog.gccompany.co.kr/feed
-      siteUrl: https://techblog.gccompany.co.kr
       adapter:
         crawler:
           type: htmlCrawler
@@ -255,7 +250,6 @@ target:
           defaultThumbnail: ""
     aws:
       url: https://aws.amazon.com/blogs/architecture/feed/
-      siteUrl: https://aws.amazon.com/blogs/architecture/
       language: EN
       adapter:
         crawler:
@@ -266,7 +260,6 @@ target:
           defaultThumbnail: ""
     cloudflare:
       url: https://blog.cloudflare.com/rss/
-      siteUrl: https://blog.cloudflare.com
       language: EN
       adapter:
         crawler:
@@ -277,7 +270,6 @@ target:
           defaultThumbnail: ""
     netflix:
       url: https://medium.com/feed/netflix-techblog
-      siteUrl: https://netflixtechblog.com
       language: EN
       adapter:
         crawler:
@@ -288,7 +280,6 @@ target:
           defaultThumbnail: ""
     stripe:
       url: https://stripe.com/blog/feed.rss
-      siteUrl: https://stripe.com/blog
       language: EN
       adapter:
         crawler:
@@ -299,7 +290,6 @@ target:
           defaultThumbnail: ""
     figma: # atom 포맷
       url: https://www.figma.com/blog/feed/atom.xml
-      siteUrl: https://www.figma.com/blog
       language: EN
       adapter:
         crawler:
@@ -310,7 +300,6 @@ target:
           defaultThumbnail: ""
     discord:
       url: https://discord.com/blog/rss.xml
-      siteUrl: https://discord.com/blog
       language: EN
       adapter:
         crawler:
@@ -321,7 +310,6 @@ target:
           defaultThumbnail: ""
     meta:
       url: https://engineering.fb.com/feed/
-      siteUrl: https://engineering.fb.com
       language: EN
       adapter:
         crawler:
@@ -332,7 +320,6 @@ target:
           defaultThumbnail: ""
     slack:
       url: https://slack.engineering/feed/
-      siteUrl: https://slack.engineering
       language: EN
       adapter:
         crawler:
@@ -343,7 +330,6 @@ target:
           defaultThumbnail: ""
     github:
       url: https://github.blog/engineering/feed/
-      siteUrl: https://github.blog/engineering/
       language: EN
       adapter:
         crawler:

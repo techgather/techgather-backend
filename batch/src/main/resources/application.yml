@@ -38,7 +38,6 @@ spring:
       topic: ${techgather.kafka.topic:post}
       group-id: ${techgather.kafka.consumer.group-id:techgather-batch}
       poll-timeout: ${techgather.kafka.consumer.poll-timeout:5000}
-      max-empty-polls: ${techgather.kafka.consumer.max-empty-polls:3}
       auto-offset-reset: ${techgather.kafka.consumer.auto-offset-reset:earliest}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
@@ -49,8 +48,6 @@ spring:
       sasl.mechanism: ${techgather.kafka.sasl.mechanism:}
       sasl.jaas.config: ${techgather.kafka.sasl.jaas-config:}
   batch:
-    chunk:
-      size: ${techgather.batch.chunk.size:100}
     job:
       enabled: ${techgather.batch.job.enabled:true}
     jdbc:
