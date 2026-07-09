@@ -4,15 +4,14 @@ TechGather 백엔드 서비스를 위한 Claude Code 가이드.
 
 ## 프로젝트 개요
 
-기술 아티클 수집·분류·제공 플랫폼의 백엔드. Kotlin/Java 멀티모듈 구조로 수집(collector), 분류(batch), API 제공(api), 인증(authentication), 도메인(domain), 공통(application) 6개 모듈로 구성.
+기술 아티클 수집·분류·제공 플랫폼의 백엔드. Kotlin/Java 멀티모듈 구조로 수집(collector), 배치 처리(batch), API 제공(api), 도메인(domain), 공통(application) 5개 모듈로 구성.
 
 **기술 스택**
 - Spring Boot 3.5.6 / Java 17 / Kotlin 2.1.0
 - MySQL (JPA + QueryDSL 5.0)
 - Kafka (수집 메시지 발행/소비)
-- Spring Batch (RSS 피드 분류 파이프라인)
-- Spring Security + OAuth2 Resource Server (JWT, AWS Cognito)
-- AWS Parameter Store, Secrets Manager
+- Spring Batch (RSS 피드 적재/공개 파이프라인)
+- Spring Security
 - Ktor 3.3 (collector HTTP 클라이언트)
 - Lombok (Java 모듈), Snowflake ID
 
@@ -21,8 +20,7 @@ TechGather 백엔드 서비스를 위한 Claude Code 가이드.
 | 모듈 | 언어 | 역할 |
 |------|------|------|
 | `api` | Kotlin | REST API 서버 (Spring Boot 실행) |
-| `authentication` | Java | OAuth2/Cognito 인증 서버 (Spring Boot 실행) |
-| `batch` | Java | Spring Batch + Kafka 소비 (RSS 분류) |
+| `batch` | Java | Spring Batch + Kafka 소비 (RSS 적재/공개) |
 | `collector` | Kotlin | RSS/HTML 수집 + Kafka 발행 (헥사고날 구조) |
 | `domain` | Java | JPA 엔티티 + QueryDSL 리포지토리 |
 | `application` | Java | 공통 예외, Snowflake ID 생성기 |
@@ -33,9 +31,8 @@ TechGather 백엔드 서비스를 위한 Claude Code 가이드.
 # 전체 빌드
 ./gradlew build
 
-# 모듈별 실행 (api / authentication / batch / collector)
+# 모듈별 실행 (api / batch / collector)
 ./gradlew :api:bootRun
-./gradlew :authentication:bootRun
 ./gradlew :batch:bootRun
 ./gradlew :collector:bootRun
 
@@ -61,11 +58,8 @@ api/src/main/kotlin/api/
 │       └── response/    # 응답 DTO
 ├── service/             # 비즈니스 로직 (@Transactional)
 │   └── dto/result/      # 서비스 결과 DTO
-├── annotation/          # 커스텀 어노테이션 (@Role)
-├── aop/                 # AOP (RoleAspect)
-├── util/                # JWT 파싱 등 유틸
 └── global/
-    ├── config/          # Spring 설정 (Security, Swagger, RDS, AWS)
+    ├── config/          # Spring 설정 (Security, Swagger)
     ├── exception/       # GlobalExceptionHandler, ApiErrorResponse
     └── logging/         # 요청 로깅 필터
 

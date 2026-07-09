@@ -1,7 +1,6 @@
 package domain.constants;
 
 public enum AuthProvider {
-    COGNITO,
     GOOGLE,
     UNKNOWN;
 
