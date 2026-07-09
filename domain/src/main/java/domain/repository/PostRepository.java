@@ -41,12 +41,13 @@ public interface PostRepository extends JpaRepository<Post, Long>, CustomPostRep
 
     @Query("""
             SELECT p FROM Post p
-            WHERE p.status = 'PUBLISHED'
+            WHERE p.status = 'NOT_PUBLISHED'
               AND NOT EXISTS (
                   SELECT pc FROM PostCategory pc WHERE pc.post.postId = p.postId
               )
+            ORDER BY p.pubDate DESC, p.postId DESC
             """)
-    List<Post> findPublishedUnclassifiedPosts();
+    List<Post> findNotPublishedUnclassifiedPosts(Pageable pageable);
 
     @Query("SELECT p FROM Post p WHERE p.status = :status ORDER BY p.pubDate ASC")
     List<Post> findByStatusOrderByPubDateAsc(@Param("status") PostStatus status, Pageable pageable);

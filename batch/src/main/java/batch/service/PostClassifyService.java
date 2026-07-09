@@ -10,6 +10,8 @@ import domain.repository.PostCategoryRepository;
 import domain.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +29,11 @@ public class PostClassifyService {
     private final PostRepository postRepository;
     private final CategoryRepository categoryRepository;
     private final PostCategoryRepository postCategoryRepository;
+    private final NvidiaPostClassifier nvidiaPostClassifier;
     private final SnowFlake snowFlake = SnowFlake.getInstance();
+
+    @Value("${classification.batch-size:40}")
+    private int classificationBatchSize;
 
     // slug → 매칭 키워드 목록 (소문자, 순서대로 우선순위 높음)
     private static final List<Map.Entry<String, List<String>>> KEYWORD_RULES = List.of(
@@ -98,22 +104,30 @@ public class PostClassifyService {
     );
 
     @Transactional
-    public void classifyUnclassifiedPosts() {
-        List<Post> posts = postRepository.findPublishedUnclassifiedPosts();
+    public synchronized PostClassifyResult classifyUnclassifiedPosts() {
+        nvidiaPostClassifier.resetRunState();
+
+        List<Post> posts = postRepository.findNotPublishedUnclassifiedPosts(PageRequest.of(0, classificationBatchSize));
         if (posts.isEmpty()) {
             log.info("[분류] 미분류 게시글 없음");
-            return;
+            return new PostClassifyResult(0, 0, 0, 0, 0);
         }
 
         log.info("[분류] 미분류 게시글 {}개 분류 시작", posts.size());
+        if (!nvidiaPostClassifier.isAvailable()) {
+            log.info("[분류] NVIDIA LLM 비활성화 상태입니다. 키워드 기반 fallback만 사용합니다.");
+        }
 
         Map<String, Category> categoryBySlug = categoryRepository.findAllByOrderByNameAsc()
                 .stream()
                 .collect(Collectors.toMap(Category::getSlug, c -> c));
 
         int classified = 0;
+        int llmClassified = 0;
+        int keywordClassified = 0;
         for (Post post : posts) {
-            Optional<Category> category = resolveCategory(post, categoryBySlug);
+            Optional<Category> llmCategory = nvidiaPostClassifier.classify(post, categoryBySlug);
+            Optional<Category> category = llmCategory.or(() -> resolveCategory(post, categoryBySlug));
             if (category.isEmpty()) {
                 continue;
             }
@@ -121,10 +135,26 @@ public class PostClassifyService {
                 continue;
             }
             postCategoryRepository.save(PostCategory.create(snowFlake.nextId(), post, category.get()));
+            if (llmCategory.isPresent()) {
+                llmClassified++;
+            } else {
+                keywordClassified++;
+            }
             classified++;
         }
 
-        log.info("[분류] {}개 분류 완료 (미분류 유지: {}개)", classified, posts.size() - classified);
+        log.info("[분류] {}개 분류 완료 (LLM: {}개, 키워드: {}개, 미분류 유지: {}개)",
+                classified, llmClassified, keywordClassified, posts.size() - classified);
+        return new PostClassifyResult(posts.size(), classified, llmClassified, keywordClassified, posts.size() - classified);
+    }
+
+    public record PostClassifyResult(
+            int requested,
+            int classified,
+            int llmClassified,
+            int keywordClassified,
+            int unclassified
+    ) {
     }
 
     private Optional<Category> resolveCategory(Post post, Map<String, Category> categoryBySlug) {
