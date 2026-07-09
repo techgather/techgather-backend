@@ -30,9 +30,22 @@ class SecurityConfig {
                     .requestMatchers("/api/admin/**").permitAll()
                     .anyRequest().authenticated()
             }
+//            .oauth2ResourceServer { oauth2 ->
+//                oauth2.jwt { jwt ->
+//                    jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
+//                }
+//            }
         return http.build()
     }
 
+//    private fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
+//        val grantedAuthoritiesConverter = JwtGrantedAuthoritiesConverter().apply {
+//            setAuthoritiesClaimName("cognito:groups")
+//            setAuthorityPrefix("ROLE_")
+//        }
+//        return JwtAuthenticationConverter().apply {
+//            setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter)
+//        }
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration().apply {

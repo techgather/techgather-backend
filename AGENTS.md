@@ -9,6 +9,7 @@ This is a Spring Boot multi-module Gradle repository for tech blog aggregation.
 - `batch/`: Java Spring Batch/Kafka consumer that writes posts and tags to MySQL.
 - `domain/`: Java JPA entities, repositories, QueryDSL custom queries, shared data model.
 - `application/`: Java shared exceptions, error codes, roles, and SnowFlake ID generation.
+- `authentication/`: Java OAuth2/OIDC authentication service using AWS Cognito.
 
 Tests live under each module’s `src/test`. QueryDSL Q-classes under `build/generated/` must not be committed.
 
@@ -24,11 +25,11 @@ Tests live under each module’s `src/test`. QueryDSL Q-classes under `build/gen
 docker-compose up -d           # Start local infrastructure such as Kafka
 ```
 
-Profiles include `dev`, `docker`, and `prod`. Local development may require an external secret file because configuration imports `application-secret.yml` from configured paths.
+Profiles include `dev`, `docker`, and `prod`. Local development may require AWS credentials because secrets are loaded from AWS.
 
 ## Coding Style & Naming Conventions
 
-Use each module’s existing language: Kotlin in `api` and `collector`; Java in `domain`, `application`, and `batch`. Name Spring components by role, such as `PostService`, `PostController`, `CustomPostRepository`, and `CustomPostRepositoryImpl`.
+Use each module’s existing language: Kotlin in `api` and `collector`; Java in `domain`, `application`, `batch`, and `authentication`. Name Spring components by role, such as `PostService`, `PostController`, `CustomPostRepository`, and `CustomPostRepositoryImpl`.
 
 Prefer existing patterns over new abstractions. Use QueryDSL for complex dynamic queries and Spring Data JPA for simple repository operations.
 
@@ -51,4 +52,4 @@ Pull requests should include a summary, affected modules, test results, and link
 
 ## Security & Configuration Tips
 
-Do not commit secrets, local credentials, or build output. Document any new required configuration parameter names in the PR.
+Do not commit secrets, local credentials, or build output. Configuration values come from AWS Secrets Manager and Parameter Store. Document any new required parameter names in the PR.
