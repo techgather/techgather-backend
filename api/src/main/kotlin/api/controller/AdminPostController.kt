@@ -1,17 +1,21 @@
 package api.controller
 
+import api.controller.dto.request.ClassifyPostsRequest
 import api.controller.dto.request.PostSearchCondition
 import api.controller.dto.request.UpdatePostsRequest
+import api.controller.dto.response.ClassifyPostsResponse
 import api.controller.dto.response.PostResponseList
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
+import api.service.PostAutoClassifyService
 import api.service.PostService
 import domain.constants.Language
 import domain.constants.PostStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -22,7 +26,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/admin/posts")
 @Tag(name = "2-1 Admin Posts", description = "Admin post management APIs")
 class AdminPostController(
-    private val postService: PostService
+    private val postService: PostService,
+    private val postAutoClassifyService: PostAutoClassifyService
 ) {
 
     @GetMapping
@@ -51,6 +56,15 @@ class AdminPostController(
         @RequestBody request: UpdatePostsRequest
     ) {
         postService.markedPostStatus(request.postIds, request.status, request.categoryIds)
+    }
+
+    @PostMapping("/classify")
+    @ResponseStatus(code = HttpStatus.OK)
+    @Operation(summary = "게시글 자동 카테고리 분류", operationId = "a4-post-classify")
+    fun classifyPosts(
+        @RequestBody request: ClassifyPostsRequest
+    ): ClassifyPostsResponse {
+        return ClassifyPostsResponse.from(postAutoClassifyService.classifyPosts(request.postIds))
     }
 
     @GetMapping("/source-sites")

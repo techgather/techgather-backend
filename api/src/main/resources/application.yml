@@ -47,3 +47,14 @@ management:
 logging:
   api:
     app-name: Dev-Pick-BE
+
+classification:
+  llm:
+    enabled: ${techgather.classification.llm.enabled:false}
+    base-url: ${techgather.classification.llm.base-url:https://integrate.api.nvidia.com/v1}
+    api-key: ${techgather.nvidia.api-key:}
+    model: ${techgather.classification.llm.model:deepseek-ai/deepseek-v4-flash}
+    reasoning-effort: ${techgather.classification.llm.reasoning-effort:none}
+    timeout-millis: ${techgather.classification.llm.timeout-millis:30000}
+    min-interval-millis: ${techgather.classification.llm.min-interval-millis:1500}
+    max-calls-per-run: ${techgather.classification.llm.max-calls-per-run:40}

@@ -25,9 +25,8 @@ public class PostIngestJobService {
     private final JobLauncher jobLauncher;
     @Qualifier(RSS_COLLECT_JOB_NAME + "_job")
     private final Job rssFeedsCollectJob;
-    private final PostClassifyService postClassifyService;
 
-    public PostIngestResult runPostIngestAndClassify() throws Exception {
+    public PostIngestResult runPostIngest() throws Exception {
         log.info("[스케줄] Kafka 게시글 적재 job 시작");
 
         String createDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
@@ -38,7 +37,7 @@ public class PostIngestJobService {
 
         JobExecution jobExecution = jobLauncher.run(rssFeedsCollectJob, jobParameters);
         BatchStatus jobStatus = jobExecution.getStatus();
-        PostIngestResult result = toResult(jobExecution, false);
+        PostIngestResult result = toResult(jobExecution);
 
         if (jobStatus != BatchStatus.COMPLETED) {
             log.warn("[스케줄] Kafka 게시글 적재 job 비정상 종료. result={}", result);
@@ -46,14 +45,11 @@ public class PostIngestJobService {
         }
 
         log.info("[스케줄] Kafka 게시글 적재 job 종료");
-        log.info("[스케줄] 게시글 분류 시작");
-        postClassifyService.classifyUnclassifiedPosts();
-        log.info("[스케줄] 게시글 분류 종료");
 
-        return toResult(jobExecution, true);
+        return result;
     }
 
-    private PostIngestResult toResult(JobExecution jobExecution, boolean classified) {
+    private PostIngestResult toResult(JobExecution jobExecution) {
         List<StepResult> steps = jobExecution.getStepExecutions().stream()
                 .map(step -> new StepResult(
                         step.getStepName(),
@@ -76,7 +72,6 @@ public class PostIngestJobService {
                 jobExecution.getStatus().name(),
                 jobExecution.getExitStatus().getExitCode(),
                 jobExecution.getExitStatus().getExitDescription(),
-                classified,
                 steps,
                 failureMessages
         );
@@ -88,7 +83,6 @@ public class PostIngestJobService {
             String jobStatus,
             String exitCode,
             String exitDescription,
-            boolean classified,
             List<StepResult> steps,
             List<String> failureMessages
     ) {

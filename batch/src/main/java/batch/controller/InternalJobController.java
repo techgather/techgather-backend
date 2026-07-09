@@ -1,7 +1,6 @@
 package batch.controller;
 
 import batch.service.PostIngestJobService;
-import batch.service.PostClassifyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -21,7 +20,6 @@ public class InternalJobController {
     private static final String INTERNAL_JOB_TOKEN_HEADER = "X-Internal-Job-Token";
 
     private final PostIngestJobService postIngestJobService;
-    private final PostClassifyService postClassifyService;
 
     @Value("${internal.job-token:}")
     private String internalJobToken;
@@ -32,20 +30,11 @@ public class InternalJobController {
     ) throws Exception {
         assertAuthorized(requestToken);
 
-        PostIngestJobService.PostIngestResult result = postIngestJobService.runPostIngestAndClassify();
+        PostIngestJobService.PostIngestResult result = postIngestJobService.runPostIngest();
         if (!"COMPLETED".equals(result.jobStatus())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(result);
         }
         return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/post-classify")
-    public ResponseEntity<PostClassifyService.PostClassifyResult> postClassify(
-            @RequestHeader(value = INTERNAL_JOB_TOKEN_HEADER, required = false) String requestToken
-    ) {
-        assertAuthorized(requestToken);
-
-        return ResponseEntity.ok(postClassifyService.classifyUnclassifiedPosts());
     }
 
     private void assertAuthorized(String requestToken) {
