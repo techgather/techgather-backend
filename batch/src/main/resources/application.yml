@@ -34,6 +34,8 @@ spring:
         generate_statistics: ${techgather.jpa.hibernate.generate-statistics:false}
   kafka:
     bootstrap-servers: ${techgather.kafka.bootstrap-servers:localhost:9092}
+    dlt:
+      topic: ${techgather.kafka.dlt-topic:post.DLT}
     consumer:
       topic: ${techgather.kafka.topic:post}
       group-id: ${techgather.kafka.consumer.group-id:techgather-batch}

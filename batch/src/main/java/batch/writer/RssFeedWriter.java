@@ -8,25 +8,49 @@ import domain.repository.CustomBatchPostRepository;
 import domain.repository.CustomBatchPostTagRepository;
 import domain.repository.CustomBatchTagRepository;
 import domain.util.TagNormalizerUtils;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import batch.service.RssFeedDeadLetterPublisher;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
 @StepScope
-@RequiredArgsConstructor
+@Slf4j
 public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 
-    private final CustomBatchPostRepository customBatchPostRepository;
-    private final CustomBatchPostTagRepository customBatchPostTagRepository;
-    private final CustomBatchTagRepository customBatchTagRepository;
-    private final SnowFlake snowflake = SnowFlake.getInstance();
+	private static final int MAX_RETRIES = 3;
+	private static final long RETRY_BACKOFF_MILLIS = 100L;
+
+	private final CustomBatchPostRepository customBatchPostRepository;
+	private final CustomBatchPostTagRepository customBatchPostTagRepository;
+	private final CustomBatchTagRepository customBatchTagRepository;
+	private final RssFeedDeadLetterPublisher deadLetterPublisher;
+	private final TransactionTemplate itemTransactionTemplate;
+	private final SnowFlake snowflake = SnowFlake.getInstance();
+
+	public RssFeedWriter(
+			CustomBatchPostRepository customBatchPostRepository,
+			CustomBatchPostTagRepository customBatchPostTagRepository,
+			CustomBatchTagRepository customBatchTagRepository,
+			RssFeedDeadLetterPublisher deadLetterPublisher,
+			PlatformTransactionManager transactionManager
+	) {
+		this.customBatchPostRepository = customBatchPostRepository;
+		this.customBatchPostTagRepository = customBatchPostTagRepository;
+		this.customBatchTagRepository = customBatchTagRepository;
+		this.deadLetterPublisher = deadLetterPublisher;
+		this.itemTransactionTemplate = new TransactionTemplate(transactionManager);
+		this.itemTransactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+	}
 
     @Override
     public void write(Chunk<? extends RssFeedMessage> chunk) {
@@ -34,11 +58,44 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
             return;
         }
 
-        List<RssFeedMessage> items = new ArrayList<>();
-        chunk.forEach(items::add);
+		chunk.forEach(this::processWithRetry);
+	}
 
-        processTagsAndPosts(items);
-    }
+	private void processWithRetry(RssFeedMessage item) {
+		RuntimeException lastFailure = null;
+
+		for (int retryCount = 0; retryCount <= MAX_RETRIES; retryCount++) {
+			try {
+				itemTransactionTemplate.executeWithoutResult(status -> processTagsAndPosts(List.of(item)));
+				return;
+			} catch (RuntimeException e) {
+				lastFailure = e;
+				if (retryCount == MAX_RETRIES) {
+					break;
+				}
+
+				log.warn(
+						"Post ingest failed. retry={}/{}, url={}",
+						retryCount + 1,
+						MAX_RETRIES,
+						item.url(),
+						e
+				);
+				sleepBeforeRetry(retryCount + 1);
+			}
+		}
+
+		deadLetterPublisher.publish(item, lastFailure, MAX_RETRIES);
+	}
+
+	private void sleepBeforeRetry(int retryCount) {
+		try {
+			Thread.sleep(RETRY_BACKOFF_MILLIS * retryCount);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IllegalStateException("Interrupted while retrying post ingest", e);
+		}
+	}
 
     private void processTagsAndPosts(List<RssFeedMessage> items) {
         List<String> tagNames = extractTagNames(items);
