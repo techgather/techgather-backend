@@ -3,13 +3,14 @@ package api.controller
 import api.controller.dto.request.ClassifyPostsRequest
 import api.controller.dto.request.PostSearchCondition
 import api.controller.dto.request.UpdatePostsRequest
-import api.controller.dto.response.ClassifyPostsResponse
+import api.controller.dto.response.ClassifyPostsAcceptedResponse
 import api.controller.dto.response.PostResponseList
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import api.service.PostAutoClassifyService
+import api.service.PostAutoClassifyAsyncService
 import api.service.PostService
 import domain.constants.Language
 import domain.constants.PostStatus
@@ -27,7 +28,8 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "2-1 Admin Posts", description = "Admin post management APIs")
 class AdminPostController(
     private val postService: PostService,
-    private val postAutoClassifyService: PostAutoClassifyService
+    private val postAutoClassifyService: PostAutoClassifyService,
+    private val postAutoClassifyAsyncService: PostAutoClassifyAsyncService
 ) {
 
     @GetMapping
@@ -59,12 +61,14 @@ class AdminPostController(
     }
 
     @PostMapping("/classify")
-    @ResponseStatus(code = HttpStatus.OK)
+    @ResponseStatus(code = HttpStatus.ACCEPTED)
     @Operation(summary = "게시글 자동 카테고리 분류", operationId = "a4-post-classify")
     fun classifyPosts(
-        @RequestBody request: ClassifyPostsRequest
-    ): ClassifyPostsResponse {
-        return ClassifyPostsResponse.from(postAutoClassifyService.classifyPosts(request.postIds))
+        @Valid @RequestBody request: ClassifyPostsRequest
+    ): ClassifyPostsAcceptedResponse {
+        val postIds = postAutoClassifyService.normalizePostIds(request.postIds)
+        postAutoClassifyAsyncService.classifyPosts(postIds)
+        return ClassifyPostsAcceptedResponse.of(postIds)
     }
 
     @GetMapping("/source-sites")

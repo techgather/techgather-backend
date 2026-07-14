@@ -24,6 +24,10 @@ class PostAutoClassifyService(
 
     private val snowFlake = SnowFlake.getInstance()
 
+    fun normalizePostIds(postIds: List<String>): List<String> {
+        return parseIds(postIds).map(Long::toString)
+    }
+
     @Transactional
     fun classifyPosts(postIds: List<String>): ClassifyPostsResult {
         val parsedPostIds = parseIds(postIds)
