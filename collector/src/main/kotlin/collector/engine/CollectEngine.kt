@@ -17,7 +17,7 @@ class CollectEngine(
 
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    suspend fun run(command: CollectCommand) {
+    suspend fun run(command: CollectCommand): Int {
 
         val startTime = System.currentTimeMillis()
 
@@ -29,7 +29,7 @@ class CollectEngine(
             extractor.extract(crawlingResult, command.extractCommand)
         } catch (e: Exception) {
             log.error("Failed to extract messages from ${command.siteInfo.name}", e)
-            return
+            throw e
         }
 
         //중복 제거
@@ -54,5 +54,6 @@ class CollectEngine(
         publisher.publish(pubMessages)
 
         log.info("Published ${deduplicatedMessages.size} messages from ${command.siteInfo.name} (${(System.currentTimeMillis() - startTime).toDouble() / 1000}s)")
+        return deduplicatedMessages.size
     }
 }

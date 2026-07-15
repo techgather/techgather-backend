@@ -1,10 +1,13 @@
 package batch.writer;
 
+import batch.constants.BatchConstants;
 import batch.message.RssFeedMessage;
 import batch.service.RssFeedDeadLetterPublisher;
 import domain.repository.CustomBatchPostRepository;
 import domain.repository.CustomBatchPostTagRepository;
 import domain.repository.CustomBatchTagRepository;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.StepExecution;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +29,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
 class RssFeedWriterTest {
@@ -87,6 +91,19 @@ class RssFeedWriterTest {
 
 		verify(customBatchPostRepository, times(4)).saveAllPost(any());
 		verify(deadLetterPublisher).publish(eq(message), any(Throwable.class), eq(3));
+	}
+
+	@Test
+	void countsOnlyUniqueUrlsAfterSuccessfulProcessing() {
+		StepExecution stepExecution = new StepExecution("rss-step", new JobExecution(1L));
+		writer.setStepExecution(stepExecution);
+
+		writer.write(new Chunk<>(List.of(message(), message())));
+
+		assertEquals(
+				1L,
+				stepExecution.getExecutionContext().getLong(BatchConstants.UNIQUE_POST_COUNT_KEY)
+		);
 	}
 
 	private RssFeedMessage message() {

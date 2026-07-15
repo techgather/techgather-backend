@@ -10,8 +10,10 @@ import domain.repository.CustomBatchTagRepository;
 import domain.util.TagNormalizerUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -21,6 +23,8 @@ import batch.service.RssFeedDeadLetterPublisher;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static batch.constants.BatchConstants.UNIQUE_POST_COUNT_KEY;
 
 @Component
 @StepScope
@@ -36,6 +40,8 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 	private final RssFeedDeadLetterPublisher deadLetterPublisher;
 	private final TransactionTemplate itemTransactionTemplate;
 	private final SnowFlake snowflake = SnowFlake.getInstance();
+	private final Set<String> successfullyProcessedPostUrls = new HashSet<>();
+	private StepExecution stepExecution;
 
 	public RssFeedWriter(
 			CustomBatchPostRepository customBatchPostRepository,
@@ -50,6 +56,11 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 		this.deadLetterPublisher = deadLetterPublisher;
 		this.itemTransactionTemplate = new TransactionTemplate(transactionManager);
 		this.itemTransactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+	}
+
+	@Value("#{stepExecution}")
+	public void setStepExecution(StepExecution stepExecution) {
+		this.stepExecution = stepExecution;
 	}
 
     @Override
@@ -67,6 +78,7 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 		for (int retryCount = 0; retryCount <= MAX_RETRIES; retryCount++) {
 			try {
 				itemTransactionTemplate.executeWithoutResult(status -> processTagsAndPosts(List.of(item)));
+				recordSuccessfullyProcessedPost(item.url());
 				return;
 			} catch (RuntimeException e) {
 				lastFailure = e;
@@ -86,6 +98,17 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 		}
 
 		deadLetterPublisher.publish(item, lastFailure, MAX_RETRIES);
+	}
+
+	private void recordSuccessfullyProcessedPost(String url) {
+		if (url == null || !successfullyProcessedPostUrls.add(url) || stepExecution == null) {
+			return;
+		}
+
+		stepExecution.getExecutionContext().putLong(
+				UNIQUE_POST_COUNT_KEY,
+				successfullyProcessedPostUrls.size()
+		);
 	}
 
 	private void sleepBeforeRetry(int retryCount) {

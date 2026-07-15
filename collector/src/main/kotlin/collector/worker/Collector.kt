@@ -13,7 +13,7 @@ class Collector(
     val engine: CollectEngine,
 ) {
 
-    suspend fun collectWork() {
+    suspend fun collectWork(): Int {
 
         val command = CollectCommand(
             siteInfo = SiteInfo(
@@ -29,6 +29,6 @@ class Collector(
             }
         )
 
-        engine.run(command)
+        return engine.run(command)
     }
 }

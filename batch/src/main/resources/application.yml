@@ -62,3 +62,9 @@ internal:
 post:
   release:
     daily-count: ${techgather.post.release.daily-count:5}
+
+discord:
+  notification:
+    enabled: ${techgather.discord.notification.enabled:false}
+    webhook-url: ${techgather.discord.notification.webhook-url:}
+    timeout-millis: ${techgather.discord.notification.timeout-millis:5000}

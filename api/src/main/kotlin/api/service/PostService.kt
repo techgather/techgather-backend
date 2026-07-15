@@ -1,6 +1,7 @@
 package api.service
 
 import api.controller.dto.request.PostSearchCondition
+import api.event.PostStatusChangedEvent
 import api.service.dto.result.PostResults
 import application.generator.SnowFlake
 import domain.constants.Language
@@ -9,10 +10,11 @@ import domain.entity.PostCategory
 import domain.repository.CategoryRepository
 import domain.repository.PostCategoryRepository
 import domain.repository.PostRepository
+import org.springframework.context.ApplicationEventPublisher
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import org.springframework.http.HttpStatus
 import java.time.LocalDateTime
 import java.util.Locale
 
@@ -20,7 +22,8 @@ import java.util.Locale
 class PostService(
     private val postRepository: PostRepository,
     private val categoryRepository: CategoryRepository,
-    private val postCategoryRepository: PostCategoryRepository
+    private val postCategoryRepository: PostCategoryRepository,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) {
 
     private val snowFlake = SnowFlake.getInstance()
@@ -92,6 +95,7 @@ class PostService(
 
         val parsedCategoryIds = parseIds(categoryIds, "categoryIds")
         if (parsedCategoryIds.isNullOrEmpty() || existingPostIds.isEmpty()) {
+            publishPostStatusChangedEvent(parsedPostIds ?: emptyList(), existingPostIds, status, parsedCategoryIds)
             return
         }
 
@@ -109,6 +113,23 @@ class PostService(
         }
 
         postCategoryRepository.saveAll(newMappings)
+        publishPostStatusChangedEvent(parsedPostIds ?: emptyList(), existingPostIds, status, parsedCategoryIds)
+    }
+
+    private fun publishPostStatusChangedEvent(
+        requestedPostIds: List<Long>,
+        changedPostIds: List<Long>,
+        status: PostStatus,
+        categoryIds: List<Long>?
+    ) {
+        applicationEventPublisher.publishEvent(
+            PostStatusChangedEvent(
+                requestedPostIds = requestedPostIds,
+                changedPostIds = changedPostIds,
+                status = status,
+                categoryIds = categoryIds
+            )
+        )
     }
 
     @Transactional(readOnly = true)

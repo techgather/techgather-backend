@@ -29,6 +29,12 @@ collector:
     token: ${techgather.internal.job-token:}
     timeout-millis: ${techgather.collector.batch-job.timeout-millis:60000}
 
+discord:
+  notification:
+    enabled: ${techgather.discord.notification.enabled:false}
+    webhook-url: ${techgather.discord.notification.webhook-url:}
+    timeout-millis: ${techgather.discord.notification.timeout-millis:5000}
+
 target:
   actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany,aws,cloudflare,netflix,stripe,figma,discord,meta,slack,github
   entries:

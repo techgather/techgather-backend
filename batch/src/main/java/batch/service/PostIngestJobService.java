@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static batch.constants.BatchConstants.RSS_COLLECT_JOB_NAME;
+import static batch.constants.BatchConstants.UNIQUE_POST_COUNT_KEY;
 
 @Slf4j
 @Service
@@ -45,7 +46,6 @@ public class PostIngestJobService {
         }
 
         log.info("[스케줄] Kafka 게시글 적재 job 종료");
-
         return result;
     }
 
@@ -58,7 +58,8 @@ public class PostIngestJobService {
                         step.getReadCount(),
                         step.getWriteCount(),
                         step.getCommitCount(),
-                        step.getRollbackCount()
+                        step.getRollbackCount(),
+                        step.getExecutionContext().getLong(UNIQUE_POST_COUNT_KEY, 0L)
                 ))
                 .toList();
 
@@ -73,6 +74,7 @@ public class PostIngestJobService {
                 jobExecution.getExitStatus().getExitCode(),
                 jobExecution.getExitStatus().getExitDescription(),
                 steps,
+                steps.stream().mapToLong(StepResult::uniquePostCount).sum(),
                 failureMessages
         );
     }
@@ -84,6 +86,7 @@ public class PostIngestJobService {
             String exitCode,
             String exitDescription,
             List<StepResult> steps,
+            long uniquePostCount,
             List<String> failureMessages
     ) {
     }
@@ -95,7 +98,8 @@ public class PostIngestJobService {
             long readCount,
             long writeCount,
             long commitCount,
-            long rollbackCount
+            long rollbackCount,
+            long uniquePostCount
     ) {
     }
 }

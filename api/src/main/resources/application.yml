@@ -48,6 +48,12 @@ logging:
   api:
     app-name: Dev-Pick-BE
 
+discord:
+  notification:
+    enabled: ${techgather.discord.notification.enabled:false}
+    webhook-url: ${techgather.discord.notification.webhook-url:}
+    timeout-millis: ${techgather.discord.notification.timeout-millis:5000}
+
 classification:
   llm:
     enabled: ${techgather.classification.llm.enabled:false}

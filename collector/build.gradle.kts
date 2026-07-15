@@ -19,6 +19,7 @@ repositories {
 
 dependencies {
 	implementation(libs.kotlin.reflect)
+	implementation(project(":application"))
 
 	implementation(libs.bundles.ktor)
 
