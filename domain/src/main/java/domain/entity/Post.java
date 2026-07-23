@@ -34,6 +34,9 @@ public class Post extends BaseTime {
 	@Column(name = "pub_date")
 	private LocalDateTime pubDate;
 
+	@Column(name = "published_at")
+	private LocalDateTime publishedAt;
+
 	@Lob
 	@Column(columnDefinition = "TEXT")
 	private String thumbnail;

@@ -15,9 +15,26 @@ import java.util.List;
 public interface PostRepository extends JpaRepository<Post, Long>, CustomPostRepository {
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Post p SET p.status = :status WHERE p.postId IN :postIds")
+    @Query("""
+            UPDATE Post p
+            SET p.status = :status,
+                p.publishedAt = CASE
+                    WHEN :status = domain.constants.PostStatus.PUBLISHED THEN CURRENT_TIMESTAMP
+                    ELSE p.publishedAt
+                END
+            WHERE p.postId IN :postIds
+            """)
     void updateStatusByPostId(@Param("postIds") List<Long> postIds,
                               @Param("status") PostStatus status);
+
+    @Modifying
+    @Query(value = """
+            UPDATE post
+            SET published_at = COALESCE(updated_at, created_at)
+            WHERE status = 'PUBLISHED'
+              AND published_at IS NULL
+            """, nativeQuery = true)
+    int backfillPublishedAt();
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM Post p WHERE p.status = :status")
