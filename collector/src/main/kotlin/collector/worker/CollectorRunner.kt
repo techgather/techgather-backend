@@ -1,6 +1,8 @@
 package collector.worker
 
 import application.notification.DiscordNotifier
+import application.notification.DiscordNotification
+import application.notification.DiscordNotification.Severity
 import collector.worker.config.CollectorRunProperties
 import io.ktor.network.tls.TLSException
 import kotlinx.coroutines.async
@@ -50,6 +52,7 @@ class CollectorRunner(
     }
 
     private fun runCollectors() {
+        val startedAtNanos = System.nanoTime()
         runBlocking {
             coroutineScope {
                 val collectors = collectorRegistry.getCollectors()
@@ -70,7 +73,8 @@ class CollectorRunner(
                     }
                 }.awaitAll()
                 val ingestResult = batchJobTriggerClient.triggerPostIngest()
-                notifyCollectionAndIngestResult(outcomes, ingestResult)
+                val elapsedMillis = (System.nanoTime() - startedAtNanos) / 1_000_000
+                notifyCollectionAndIngestResult(outcomes, ingestResult, elapsedMillis)
                 log.info(
                     "All collectors finished. total={}, succeeded={}, failed={}",
                     outcomes.size,
@@ -83,51 +87,79 @@ class CollectorRunner(
 
     private fun notifyCollectionAndIngestResult(
         outcomes: List<CollectorOutcome>,
-        ingestResult: BatchJobTriggerClient.PostIngestTriggerResult
+        ingestResult: BatchJobTriggerClient.PostIngestTriggerResult,
+        elapsedMillis: Long
     ) {
         val failures = outcomes.filter { it.failure != null }
         val ingestFailed = !ingestResult.skipped && !ingestResult.completed
-        val title = when {
-            failures.isNotEmpty() || ingestFailed -> "⚠️ 게시글 수집 처리 일부 실패"
-            ingestResult.skipped -> "⚠️ 게시글 수집 처리 미완료"
-            else -> "✅ 게시글 수집 완료"
+        val severity = when {
+            failures.size == outcomes.size || ingestFailed -> Severity.ERROR
+            failures.isNotEmpty() || ingestResult.skipped -> Severity.WARNING
+            else -> Severity.SUCCESS
+        }
+        val title = when (severity) {
+            Severity.SUCCESS -> "게시글 수집 완료"
+            Severity.WARNING -> "게시글 수집 부분 완료"
+            else -> "게시글 수집 실패"
+        }
+        val successCount = outcomes.size - failures.size
+        val newPostCount = outcomes.sumOf { it.collectedCount }
+        val finalPostCount = ingestResult.summary?.uniquePostCount
+        val topSites = outcomes
+            .asSequence()
+            .filter { it.failure == null && it.collectedCount > 0 }
+            .sortedByDescending { it.collectedCount }
+            .take(5)
+            .joinToString("\n") { "• **${it.name}** — ${it.collectedCount}건" }
+            .ifBlank { "신규 글 없음" }
+        val failureSummary = failures
+            .take(10)
+            .joinToString("\n") {
+                "• **${it.name}** — ${it.failure?.message ?: "알 수 없는 오류"}"
+            }
+            .let {
+                if (failures.size > 10) "$it\n• 외 ${failures.size - 10}개 사이트" else it
+            }
+        val ingestStatus = when {
+            ingestResult.skipped -> "스킵"
+            ingestResult.completed -> "완료"
+            else -> "실패 · HTTP ${ingestResult.statusCode ?: "연결 실패"}"
         }
 
-        val message = buildString {
-            appendLine("처리 대상 사이트: ${outcomes.size}개")
-            val finalPostCount = if (ingestResult.completed) {
-                ingestResult.summary?.uniquePostCount
-            } else {
-                null
-            }
-            appendLine("최종 처리 게시글: ${finalPostCount?.toString() ?: "확인 불가"}건")
-            if (failures.isNotEmpty()) {
-                appendLine("실패 대상:")
-                failures.forEach { outcome ->
-                    appendLine("- ${outcome.name}: ${outcome.failure?.message ?: "알 수 없는 오류"}")
+        val notification = DiscordNotification.builder(severity, title)
+            .description("기술 블로그 수집 및 게시글 적재 결과입니다.")
+            .field("수집 성공", "$successCount / ${outcomes.size}개", true)
+            .field("수집 실패", "${failures.size}개", true)
+            .field("신규 글", "${newPostCount}건", true)
+            .field("최종 적재", finalPostCount?.let { "${it}건" } ?: "확인 불가", true)
+            .field("배치 상태", ingestStatus, true)
+            .field("소요 시간", "%.1f초".format(elapsedMillis / 1_000.0), true)
+            .field("상위 수집 사이트", topSites)
+            .apply {
+                if (failures.isNotEmpty()) {
+                    field("실패 사이트", failureSummary)
+                }
+                val ingestFailure = buildList {
+                    ingestResult.errorMessage?.let(::add)
+                    addAll(ingestResult.summary?.failureMessages.orEmpty())
+                }.joinToString("\n")
+                if (ingestFailure.isNotBlank()) {
+                    field("배치 실패 내용", ingestFailure)
                 }
             }
-            when {
-                ingestResult.skipped -> appendLine("처리 상태: 배치 스킵")
-                ingestResult.completed -> appendLine("처리 상태: 완료")
-                else -> {
-                    appendLine("처리 상태: 실패 (HTTP ${ingestResult.statusCode ?: "연결 실패"})")
-                    ingestResult.errorMessage?.let { appendLine("실패 사유: $it") }
-                    ingestResult.summary?.failureMessages
-                        ?.takeIf { it.isNotEmpty() }
-                        ?.let { appendLine("실패 내용: ${it.joinToString(" | ")}") }
-                }
-            }
-        }
+            .footer("TechGather · collector")
+            .build()
 
-        discordNotifier.send(title, message)
+        discordNotifier.send(notification)
     }
 
     private fun notifyUnexpectedFailure(e: Throwable) {
         val rootCause = e.rootCause()
         discordNotifier.send(
-            "❌ 수집 파이프라인 실패",
-            "오류: ${rootCause.message ?: rootCause::class.simpleName}"
+            DiscordNotification.builder(Severity.ERROR, "수집 파이프라인 실패")
+                .field("오류", rootCause.message ?: rootCause::class.simpleName ?: "알 수 없는 오류")
+                .footer("TechGather · collector")
+                .build()
         )
     }
 

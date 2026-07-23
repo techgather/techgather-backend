@@ -4,7 +4,12 @@ import domain.constants.PostStatus
 
 data class PostStatusChangedEvent(
     val requestedPostIds: List<Long>,
-    val changedPostIds: List<Long>,
+    val changedPosts: List<PostNotificationItem>,
     val status: PostStatus,
-    val categoryIds: List<Long>?
+    val categoryNames: List<String>?
+)
+
+data class PostNotificationItem(
+    val id: Long,
+    val title: String
 )

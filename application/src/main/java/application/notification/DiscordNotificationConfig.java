@@ -3,6 +3,7 @@ package application.notification;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
@@ -23,6 +24,7 @@ public class DiscordNotificationConfig {
     }
 
     @Bean
+    @Primary
     public DiscordNotifier discordNotifier(
             @Value("${discord.notification.enabled:false}") boolean enabled,
             @Value("${discord.notification.post-webhook-url:${discord.notification.webhook-url:}}") String webhookUrl,
@@ -38,5 +40,12 @@ public class DiscordNotificationConfig {
             @Value("${discord.notification.timeout-millis:5000}") long timeoutMillis
     ) {
         return new DiscordNotifier(enabled, webhookUrl, timeoutMillis);
+    }
+
+    @Bean
+    public AdminPostLinkFactory adminPostLinkFactory(
+            @Value("${discord.notification.admin-post-url-template:}") String adminPostUrlTemplate
+    ) {
+        return new AdminPostLinkFactory(adminPostUrlTemplate);
     }
 }

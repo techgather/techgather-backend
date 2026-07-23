@@ -2,6 +2,7 @@ package api.service
 
 import api.controller.dto.request.PostSearchCondition
 import api.event.PostStatusChangedEvent
+import api.event.PostNotificationItem
 import api.service.dto.result.PostResults
 import application.generator.SnowFlake
 import domain.constants.Language
@@ -91,11 +92,18 @@ class PostService(
     ) {
         val parsedPostIds = parseIds(postIds, "postIds")
         val existingPostIds = postRepository.findPostByPostIdIn(parsedPostIds)
+        val postSnapshots = postRepository.findAllById(existingPostIds)
+            .map { PostNotificationItem(it.postId, it.title) }
         postRepository.updateStatusByPostId(existingPostIds, status)
 
         val parsedCategoryIds = parseIds(categoryIds, "categoryIds")
         if (parsedCategoryIds.isNullOrEmpty() || existingPostIds.isEmpty()) {
-            publishPostStatusChangedEvent(parsedPostIds ?: emptyList(), existingPostIds, status, parsedCategoryIds)
+            publishPostStatusChangedEvent(
+                parsedPostIds ?: emptyList(),
+                postSnapshots,
+                status,
+                null
+            )
             return
         }
 
@@ -113,21 +121,26 @@ class PostService(
         }
 
         postCategoryRepository.saveAll(newMappings)
-        publishPostStatusChangedEvent(parsedPostIds ?: emptyList(), existingPostIds, status, parsedCategoryIds)
+        publishPostStatusChangedEvent(
+            parsedPostIds ?: emptyList(),
+            postSnapshots,
+            status,
+            categories.map { it.name }
+        )
     }
 
     private fun publishPostStatusChangedEvent(
         requestedPostIds: List<Long>,
-        changedPostIds: List<Long>,
+        changedPosts: List<PostNotificationItem>,
         status: PostStatus,
-        categoryIds: List<Long>?
+        categoryNames: List<String>?
     ) {
         applicationEventPublisher.publishEvent(
             PostStatusChangedEvent(
                 requestedPostIds = requestedPostIds,
-                changedPostIds = changedPostIds,
+                changedPosts = changedPosts,
                 status = status,
-                categoryIds = categoryIds
+                categoryNames = categoryNames
             )
         )
     }
