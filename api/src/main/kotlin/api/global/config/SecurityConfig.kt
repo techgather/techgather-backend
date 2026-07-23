@@ -27,6 +27,7 @@ class SecurityConfig {
                     .requestMatchers("/v3/api-docs/**").permitAll()
                     .requestMatchers("/api/posts", "/api/posts/**").permitAll()
                     .requestMatchers("/api/categories/**").permitAll()
+                    .requestMatchers("/api/feedbacks").permitAll()
                     .requestMatchers("/api/admin/**").permitAll()
                     .anyRequest().authenticated()
             }
