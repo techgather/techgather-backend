@@ -52,6 +52,8 @@ discord:
   notification:
     enabled: ${techgather.discord.notification.enabled:false}
     webhook-url: ${techgather.discord.notification.webhook-url:}
+    post-webhook-url: ${techgather.discord.notification.post-webhook-url:${techgather.discord.notification.webhook-url:}}
+    feedback-webhook-url: ${techgather.discord.notification.feedback-webhook-url:}
     timeout-millis: ${techgather.discord.notification.timeout-millis:5000}
 
 classification:

@@ -25,7 +25,16 @@ public class DiscordNotificationConfig {
     @Bean
     public DiscordNotifier discordNotifier(
             @Value("${discord.notification.enabled:false}") boolean enabled,
-            @Value("${discord.notification.webhook-url:}") String webhookUrl,
+            @Value("${discord.notification.post-webhook-url:${discord.notification.webhook-url:}}") String webhookUrl,
+            @Value("${discord.notification.timeout-millis:5000}") long timeoutMillis
+    ) {
+        return new DiscordNotifier(enabled, webhookUrl, timeoutMillis);
+    }
+
+    @Bean("feedbackDiscordNotifier")
+    public DiscordNotifier feedbackDiscordNotifier(
+            @Value("${discord.notification.enabled:false}") boolean enabled,
+            @Value("${discord.notification.feedback-webhook-url:}") String webhookUrl,
             @Value("${discord.notification.timeout-millis:5000}") long timeoutMillis
     ) {
         return new DiscordNotifier(enabled, webhookUrl, timeoutMillis);
