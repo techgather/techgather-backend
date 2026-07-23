@@ -36,7 +36,7 @@ discord:
     timeout-millis: ${techgather.discord.notification.timeout-millis:5000}
 
 target:
-  actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany,aws,cloudflare,netflix,stripe,figma,discord,meta,slack,github
+  actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany,aws,cloudflare,netflix,stripe,figma,discord,meta,slack,github,bucketplace
   entries:
     woowahan:
       url: https://techblog.woowahan.com/feed
@@ -47,6 +47,15 @@ target:
           type: rssV2Extractor
           useDefaultThumbnail: true
           defaultThumbnail: https://techblog.woowahan.com/wp-content/uploads/2022/01/woowahan-logo.png
+    bucketplace:
+      url: https://www.bucketplace.com/culture/Design
+      adapter:
+        crawler:
+          type: htmlCrawler
+        extractor:
+          type: bucketplaceExtractor
+          useDefaultThumbnail: false
+          defaultThumbnail: ""
     toss:
       url: https://toss.tech/rss.xml
       adapter:
