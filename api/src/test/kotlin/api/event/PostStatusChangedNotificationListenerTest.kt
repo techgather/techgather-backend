@@ -8,13 +8,14 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class PostStatusChangedNotificationListenerTest {
 
     @Test
-    fun `카테고리 이름과 관리자 게시글 링크를 알림에 포함한다`() {
+    fun `PUBLISHED 상태로 변경되면 카테고리 이름과 관리자 게시글 링크를 알림에 포함한다`() {
         val notifier = mock(DiscordNotifier::class.java)
         val listener = PostStatusChangedNotificationListener(
             notifier,
@@ -26,7 +27,7 @@ class PostStatusChangedNotificationListenerTest {
                 PostNotificationItem(1L, "첫 번째 게시글"),
                 PostNotificationItem(2L, "두 번째 게시글")
             ),
-            status = PostStatus.RESERVED,
+            status = PostStatus.PUBLISHED,
             categoryNames = listOf("백엔드", "AI")
         )
 
@@ -46,5 +47,28 @@ class PostStatusChangedNotificationListenerTest {
                 it.value().contains("[첫 번째 게시글](https://admin.example.com/posts/1)") &&
                 it.value().contains("[두 번째 게시글](https://admin.example.com/posts/2)")
         })
+    }
+
+    @Test
+    fun `PUBLISHED 상태가 아니면 알림을 보내지 않는다`() {
+        val notifier = mock(DiscordNotifier::class.java)
+        val listener = PostStatusChangedNotificationListener(
+            notifier,
+            AdminPostLinkFactory("https://admin.example.com/posts/{postId}")
+        )
+        val nonApprovedStatuses = PostStatus.entries - PostStatus.PUBLISHED
+
+        nonApprovedStatuses.forEach { status ->
+            listener.notify(
+                PostStatusChangedEvent(
+                    requestedPostIds = listOf(1L),
+                    changedPosts = listOf(PostNotificationItem(1L, "게시글")),
+                    status = status,
+                    categoryNames = null
+                )
+            )
+        }
+
+        verifyNoInteractions(notifier)
     }
 }

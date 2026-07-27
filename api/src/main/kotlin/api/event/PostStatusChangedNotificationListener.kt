@@ -16,7 +16,7 @@ class PostStatusChangedNotificationListener(
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun notify(event: PostStatusChangedEvent) {
-        if (event.changedPosts.isEmpty()) {
+        if (event.status != domain.constants.PostStatus.PUBLISHED || event.changedPosts.isEmpty()) {
             return
         }
 

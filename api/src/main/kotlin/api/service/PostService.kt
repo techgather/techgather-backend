@@ -93,6 +93,7 @@ class PostService(
         val parsedPostIds = parseIds(postIds, "postIds")
         val existingPostIds = postRepository.findPostByPostIdIn(parsedPostIds)
         val postSnapshots = postRepository.findAllById(existingPostIds)
+            .filter { it.status != status }
             .map { PostNotificationItem(it.postId, it.title) }
         postRepository.updateStatusByPostId(existingPostIds, status)
 
