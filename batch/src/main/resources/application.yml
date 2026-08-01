@@ -66,6 +66,6 @@ post:
 discord:
   notification:
     enabled: ${techgather.discord.notification.enabled:false}
-    webhook-url: ${techgather.discord.notification.webhook-url:}
+    post-webhook-url: ${techgather.discord.notification.post-webhook-url:}
     admin-post-url-template: ${techgather.discord.notification.admin-post-url-template:}
     timeout-millis: ${techgather.discord.notification.timeout-millis:5000}
