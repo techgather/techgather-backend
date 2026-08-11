@@ -37,7 +37,7 @@ discord:
     timeout-millis: ${techgather.discord.notification.timeout-millis:5000}
 
 target:
-  actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany,aws,cloudflare,netflix,stripe,figma,discord,meta,slack,github,bucketplace,toss-jobs,musinsa-jobs,kurly-jobs,kakao-pay-jobs,devsisters-jobs,zigbang-jobs,gccompany-jobs,yogiyo-jobs
+  actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany,aws,cloudflare,netflix,stripe,figma,discord,meta,slack,github,bucketplace
   entries:
     woowahan:
       url: https://techblog.woowahan.com/feed
@@ -352,86 +352,6 @@ target:
           type: htmlCrawler
         extractor:
           type: rssV2Extractor
-          useDefaultThumbnail: false
-          defaultThumbnail: ""
-    toss-jobs:
-      sourceSiteName: toss
-      url: https://api-public.toss.im/api/v3/ipd-eggnog/career/jobs
-      adapter:
-        crawler:
-          type: htmlCrawler
-        extractor:
-          type: tossJobExtractor
-          useDefaultThumbnail: false
-          defaultThumbnail: ""
-    musinsa-jobs:
-      sourceSiteName: musinsa
-      url: https://www.musinsacareers.com/ko/home
-      adapter:
-        crawler:
-          type: htmlCrawler
-        extractor:
-          type: greetingHrExtractor
-          useDefaultThumbnail: false
-          defaultThumbnail: ""
-    kurly-jobs:
-      sourceSiteName: kurly
-      url: https://kurly.career.greetinghr.com/ko/recruiting
-      adapter:
-        crawler:
-          type: htmlCrawler
-        extractor:
-          type: greetingHrExtractor
-          useDefaultThumbnail: false
-          defaultThumbnail: ""
-    kakao-pay-jobs:
-      sourceSiteName: kakao-pay
-      url: https://kakaopay.career.greetinghr.com/ko/main
-      adapter:
-        crawler:
-          type: htmlCrawler
-        extractor:
-          type: greetingHrExtractor
-          useDefaultThumbnail: false
-          defaultThumbnail: ""
-    devsisters-jobs:
-      sourceSiteName: devsisters
-      url: https://careers.devsisters.com/ko/position
-      adapter:
-        crawler:
-          type: htmlCrawler
-        extractor:
-          type: greetingHrExtractor
-          useDefaultThumbnail: false
-          defaultThumbnail: ""
-    zigbang-jobs:
-      sourceSiteName: zigbang
-      url: https://zigbang.career.greetinghr.com/ko/positions
-      adapter:
-        crawler:
-          type: htmlCrawler
-        extractor:
-          type: greetingHrExtractor
-          useDefaultThumbnail: false
-          defaultThumbnail: ""
-    gccompany-jobs:
-      sourceSiteName: gccompany
-      url: https://gccompany.career.greetinghr.com/ko/positions
-      adapter:
-        crawler:
-          type: htmlCrawler
-        extractor:
-          type: greetingHrExtractor
-          useDefaultThumbnail: false
-          defaultThumbnail: ""
-    yogiyo-jobs:
-      sourceSiteName: yogiyo
-      url: https://wesangcareer.ninehire.site/apply
-      adapter:
-        crawler:
-          type: htmlCrawler
-        extractor:
-          type: ninehireExtractor
           useDefaultThumbnail: false
           defaultThumbnail: ""
 #    44bits: 미수집
