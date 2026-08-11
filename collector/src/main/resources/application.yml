@@ -37,7 +37,7 @@ discord:
     timeout-millis: ${techgather.discord.notification.timeout-millis:5000}
 
 target:
-  actives: woowahan,toss,musinsa,naver,kurly,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany,aws,cloudflare,netflix,stripe,figma,discord,meta,slack,github,bucketplace
+  actives: woowahan,toss,musinsa,naver,kakao,kakao-pay,devsisters,line,coupang,daangn,zigbang,watcha,banksalad,hyperconnect,yogiyo,socar,nhn,gaeraeblog,oliveyoung,gccompany,aws,cloudflare,netflix,stripe,figma,discord,meta,slack,github,bucketplace
   entries:
     woowahan:
       url: https://techblog.woowahan.com/feed

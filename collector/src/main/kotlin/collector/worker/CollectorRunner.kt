@@ -97,11 +97,7 @@ class CollectorRunner(
             failures.isNotEmpty() || ingestResult.skipped -> Severity.WARNING
             else -> Severity.SUCCESS
         }
-        val title = when (severity) {
-            Severity.SUCCESS -> "게시글 수집 완료"
-            Severity.WARNING -> "게시글 수집 부분 완료"
-            else -> "게시글 수집 실패"
-        }
+        val title = "게시글 수집 완료"
         val successCount = outcomes.size - failures.size
         val newPostCount = outcomes.sumOf { it.collectedCount }
         val finalPostCount = ingestResult.summary?.uniquePostCount
