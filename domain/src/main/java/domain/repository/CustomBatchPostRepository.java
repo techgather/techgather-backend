@@ -7,4 +7,6 @@ import java.util.List;
 public interface CustomBatchPostRepository {
 
 	void saveAllPost(List<Post> posts);
+
+	List<String> findExistingUrls(List<String> urls);
 }

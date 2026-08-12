@@ -107,6 +107,15 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
         );
     }
 
+    @Override
+    public List<String> findExistingUrls(List<String> urls) {
+        if (urls == null || urls.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return new ArrayList<>(findPostIdsByUrls(urls).keySet());
+    }
+
     private Map<String, Long> findPostIdsByUrls(List<String> urls) {
         if (urls == null || urls.isEmpty()) {
             return Collections.emptyMap();

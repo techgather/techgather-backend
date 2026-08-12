@@ -26,8 +26,10 @@ collector:
   batch-job:
     enabled: ${techgather.collector.batch-job.enabled:true}
     post-ingest-url: ${techgather.collector.batch-job.post-ingest-url:http://localhost:7500/internal/jobs/post-ingest}
+    existing-post-urls-url: ${techgather.collector.batch-job.existing-post-urls-url:}
     token: ${techgather.internal.job-token:}
     timeout-millis: ${techgather.collector.batch-job.timeout-millis:60000}
+    lookup-timeout-millis: ${techgather.collector.batch-job.lookup-timeout-millis:10000}
 
 discord:
   notification:

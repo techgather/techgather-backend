@@ -20,9 +20,15 @@ class CollectorRunProperties(
 class BatchJobTriggerProperties(
     var enabled: Boolean = true,
     var postIngestUrl: String = "http://localhost:7500/internal/jobs/post-ingest",
+    var existingPostUrlsUrl: String = "",
     var token: String = "",
     var timeoutMillis: Long = 60000,
-)
+    var lookupTimeoutMillis: Long = 10000,
+) {
+    fun resolvedExistingPostUrlsUrl(): String = existingPostUrlsUrl.ifBlank {
+        postIngestUrl.substringBeforeLast('/') + "/existing-post-urls"
+    }
+}
 
 data class TargetProps(
     var url: String = "",
