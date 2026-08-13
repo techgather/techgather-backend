@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static batch.constants.BatchConstants.UNIQUE_POST_COUNT_KEY;
+import static batch.constants.BatchConstants.INSERTED_POST_COUNT_KEY;
 
 @Component
 @StepScope
@@ -41,6 +42,7 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 	private final TransactionTemplate itemTransactionTemplate;
 	private final SnowFlake snowflake = SnowFlake.getInstance();
 	private final Set<String> successfullyProcessedPostUrls = new HashSet<>();
+	private long insertedPostCount;
 	private StepExecution stepExecution;
 
 	public RssFeedWriter(
@@ -77,8 +79,10 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 
 		for (int retryCount = 0; retryCount <= MAX_RETRIES; retryCount++) {
 			try {
-				itemTransactionTemplate.executeWithoutResult(status -> processTagsAndPosts(List.of(item)));
-				recordSuccessfullyProcessedPost(item.url());
+				Integer insertedCount = itemTransactionTemplate.execute(
+						status -> processTagsAndPosts(List.of(item))
+				);
+				recordSuccessfullyProcessedPost(item.url(), insertedCount == null ? 0 : insertedCount);
 				return;
 			} catch (RuntimeException e) {
 				lastFailure = e;
@@ -100,14 +104,20 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 		deadLetterPublisher.publish(item, lastFailure, MAX_RETRIES);
 	}
 
-	private void recordSuccessfullyProcessedPost(String url) {
+	private void recordSuccessfullyProcessedPost(String url, int insertedCount) {
 		if (url == null || !successfullyProcessedPostUrls.add(url) || stepExecution == null) {
 			return;
 		}
 
+		insertedPostCount += insertedCount;
+
 		stepExecution.getExecutionContext().putLong(
 				UNIQUE_POST_COUNT_KEY,
 				successfullyProcessedPostUrls.size()
+		);
+		stepExecution.getExecutionContext().putLong(
+				INSERTED_POST_COUNT_KEY,
+				insertedPostCount
 		);
 	}
 
@@ -120,7 +130,7 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 		}
 	}
 
-    private void processTagsAndPosts(List<RssFeedMessage> items) {
+    private int processTagsAndPosts(List<RssFeedMessage> items) {
         List<String> tagNames = extractTagNames(items);
         if (!CollectionUtils.isEmpty(tagNames)) {
             List<Tag> tags = tagNames.stream()
@@ -130,10 +140,12 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
         }
 
         List<Post> posts = convertToPosts(items);
+        int insertedCount = 0;
         if (!CollectionUtils.isEmpty(posts)) {
-            customBatchPostRepository.saveAllPost(posts);
+            insertedCount = customBatchPostRepository.saveAllPost(posts);
         }
         savePostTags(items);
+        return insertedCount;
     }
 
     private List<String> extractTagNames(List<RssFeedMessage> items) {

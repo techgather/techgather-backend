@@ -97,7 +97,8 @@ class BatchJobTriggerClient(
         val jobStatus: String? = null,
         val steps: List<PostIngestStepSummary> = emptyList(),
         val failureMessages: List<String> = emptyList(),
-        val uniquePostCount: Long? = null
+        val uniquePostCount: Long? = null,
+        val insertedPostCount: Long? = null
     )
 
     data class PostIngestStepSummary(

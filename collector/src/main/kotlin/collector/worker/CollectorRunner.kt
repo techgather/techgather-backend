@@ -100,7 +100,7 @@ class CollectorRunner(
         val title = "게시글 수집 완료"
         val successCount = outcomes.size - failures.size
         val newPostCount = outcomes.sumOf { it.collectedCount }
-        val finalPostCount = ingestResult.summary?.uniquePostCount
+        val insertedPostCount = ingestResult.summary?.insertedPostCount
         val topSites = outcomes
             .asSequence()
             .filter { it.failure == null && it.collectedCount > 0 }
@@ -126,8 +126,8 @@ class CollectorRunner(
             .description("기술 블로그 수집 및 게시글 적재 결과입니다.")
             .field("수집 성공", "$successCount / ${outcomes.size}개", true)
             .field("수집 실패", "${failures.size}개", true)
-            .field("신규 글", "${newPostCount}건", true)
-            .field("최종 적재", finalPostCount?.let { "${it}건" } ?: "확인 불가", true)
+            .field("수집한 글", "${newPostCount}건", true)
+            .field("적재한 글", insertedPostCount?.let { "${it}건" } ?: "확인 불가", true)
             .field("배치 상태", ingestStatus, true)
             .field("소요 시간", "%.1f초".format(elapsedMillis / 1_000.0), true)
             .field("상위 수집 사이트", topSites)

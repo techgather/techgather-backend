@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static batch.constants.BatchConstants.RSS_COLLECT_JOB_NAME;
+import static batch.constants.BatchConstants.INSERTED_POST_COUNT_KEY;
 import static batch.constants.BatchConstants.UNIQUE_POST_COUNT_KEY;
 
 @Slf4j
@@ -59,7 +60,8 @@ public class PostIngestJobService {
                         step.getWriteCount(),
                         step.getCommitCount(),
                         step.getRollbackCount(),
-                        step.getExecutionContext().getLong(UNIQUE_POST_COUNT_KEY, 0L)
+                        step.getExecutionContext().getLong(UNIQUE_POST_COUNT_KEY, 0L),
+                        step.getExecutionContext().getLong(INSERTED_POST_COUNT_KEY, 0L)
                 ))
                 .toList();
 
@@ -75,6 +77,7 @@ public class PostIngestJobService {
                 jobExecution.getExitStatus().getExitDescription(),
                 steps,
                 steps.stream().mapToLong(StepResult::uniquePostCount).sum(),
+                steps.stream().mapToLong(StepResult::insertedPostCount).sum(),
                 failureMessages
         );
     }
@@ -87,6 +90,7 @@ public class PostIngestJobService {
             String exitDescription,
             List<StepResult> steps,
             long uniquePostCount,
+            long insertedPostCount,
             List<String> failureMessages
     ) {
     }
@@ -99,7 +103,8 @@ public class PostIngestJobService {
             long writeCount,
             long commitCount,
             long rollbackCount,
-            long uniquePostCount
+            long uniquePostCount,
+            long insertedPostCount
     ) {
     }
 }

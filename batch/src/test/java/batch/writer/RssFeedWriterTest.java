@@ -70,7 +70,7 @@ class RssFeedWriterTest {
 	void retriesTransientFailureAndDoesNotPublishToDlt() {
 		RssFeedMessage message = message();
 		doThrow(new IllegalStateException("temporary database failure"))
-				.doNothing()
+				.doReturn(1)
 				.when(customBatchPostRepository)
 				.saveAllPost(any());
 
@@ -103,6 +103,31 @@ class RssFeedWriterTest {
 		assertEquals(
 				1L,
 				stepExecution.getExecutionContext().getLong(BatchConstants.UNIQUE_POST_COUNT_KEY)
+		);
+	}
+
+	@Test
+	void countsOnlyPostsActuallyInsertedAfterDeduplication() {
+		StepExecution stepExecution = new StepExecution("rss-step", new JobExecution(1L));
+		writer.setStepExecution(stepExecution);
+		when(customBatchPostRepository.saveAllPost(any())).thenReturn(1, 0);
+
+		RssFeedMessage first = message();
+		RssFeedMessage existing = new RssFeedMessage(
+				"existing",
+				"https://example.com/existing",
+				LocalDateTime.now(),
+				Set.of(),
+				"description",
+				null,
+				"example",
+				"KO"
+		);
+		writer.write(new Chunk<>(List.of(first, existing)));
+
+		assertEquals(
+				1L,
+				stepExecution.getExecutionContext().getLong(BatchConstants.INSERTED_POST_COUNT_KEY)
 		);
 	}
 

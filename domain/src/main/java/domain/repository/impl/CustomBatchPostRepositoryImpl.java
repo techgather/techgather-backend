@@ -37,9 +37,9 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
     private static final String SELECT_SQL = "SELECT post_id, url FROM post WHERE url IN (%s)";
 
     @Override
-    public void saveAllPost(List<Post> posts) {
+    public int saveAllPost(List<Post> posts) {
         if (posts == null || posts.isEmpty()) {
-            return;
+            return 0;
         }
 
         List<String> urls = posts.stream()
@@ -105,6 +105,8 @@ public class CustomBatchPostRepositoryImpl implements CustomBatchPostRepository 
                 unchanged,
                 unknown
         );
+
+        return inserted;
     }
 
     @Override
