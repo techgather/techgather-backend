@@ -1,5 +1,6 @@
 package collector.worker
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
 import collector.worker.config.BatchJobTriggerProperties
 import io.ktor.client.HttpClient
@@ -49,6 +50,13 @@ class BatchJobTriggerClient(
             val completed = response.status.value in 200..299
             val summary = runCatching {
                 objectMapper.readValue(responseBody, PostIngestSummary::class.java)
+            }.onFailure { e ->
+                log.error(
+                    "Batch post-ingest response parsing failed. status={}, body={}",
+                    response.status.value,
+                    responseBody,
+                    e
+                )
             }.getOrNull()
 
             if (!completed) {
@@ -93,6 +101,7 @@ class BatchJobTriggerClient(
         val errorMessage: String?
     )
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     data class PostIngestSummary(
         val jobStatus: String? = null,
         val steps: List<PostIngestStepSummary> = emptyList(),
@@ -101,6 +110,7 @@ class BatchJobTriggerClient(
         val insertedPostCount: Long? = null
     )
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     data class PostIngestStepSummary(
         val readCount: Long = 0,
         val writeCount: Long = 0
