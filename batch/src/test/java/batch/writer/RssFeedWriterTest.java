@@ -3,6 +3,7 @@ package batch.writer;
 import batch.constants.BatchConstants;
 import batch.message.RssFeedMessage;
 import batch.service.RssFeedDeadLetterPublisher;
+import batch.service.PostIngestClassificationService;
 import domain.repository.CustomBatchPostRepository;
 import domain.repository.CustomBatchPostTagRepository;
 import domain.repository.CustomBatchTagRepository;
@@ -47,6 +48,9 @@ class RssFeedWriterTest {
 	private RssFeedDeadLetterPublisher deadLetterPublisher;
 
 	@Mock
+	private PostIngestClassificationService classificationService;
+
+	@Mock
 	private PlatformTransactionManager transactionManager;
 
 	@Mock
@@ -62,6 +66,7 @@ class RssFeedWriterTest {
 				customBatchPostTagRepository,
 				customBatchTagRepository,
 				deadLetterPublisher,
+				classificationService,
 				transactionManager
 		);
 	}
@@ -129,6 +134,15 @@ class RssFeedWriterTest {
 				1L,
 				stepExecution.getExecutionContext().getLong(BatchConstants.INSERTED_POST_COUNT_KEY)
 		);
+	}
+
+	@Test
+	void classifiesOnlyNewlyInsertedPost() {
+		when(customBatchPostRepository.saveAllPost(any())).thenReturn(1, 0);
+
+		writer.write(new Chunk<>(List.of(message(), message())));
+
+		verify(classificationService, times(1)).classifyOrMoveToOnHold(any(), eq("description"), any());
 	}
 
 	private RssFeedMessage message() {

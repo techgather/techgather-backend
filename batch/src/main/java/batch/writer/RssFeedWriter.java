@@ -20,6 +20,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import batch.service.RssFeedDeadLetterPublisher;
+import batch.service.PostIngestClassificationService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,6 +40,7 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 	private final CustomBatchPostTagRepository customBatchPostTagRepository;
 	private final CustomBatchTagRepository customBatchTagRepository;
 	private final RssFeedDeadLetterPublisher deadLetterPublisher;
+	private final PostIngestClassificationService classificationService;
 	private final TransactionTemplate itemTransactionTemplate;
 	private final SnowFlake snowflake = SnowFlake.getInstance();
 	private final Set<String> successfullyProcessedPostUrls = new HashSet<>();
@@ -50,12 +52,14 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
 			CustomBatchPostTagRepository customBatchPostTagRepository,
 			CustomBatchTagRepository customBatchTagRepository,
 			RssFeedDeadLetterPublisher deadLetterPublisher,
+			PostIngestClassificationService classificationService,
 			PlatformTransactionManager transactionManager
 	) {
 		this.customBatchPostRepository = customBatchPostRepository;
 		this.customBatchPostTagRepository = customBatchPostTagRepository;
 		this.customBatchTagRepository = customBatchTagRepository;
 		this.deadLetterPublisher = deadLetterPublisher;
+		this.classificationService = classificationService;
 		this.itemTransactionTemplate = new TransactionTemplate(transactionManager);
 		this.itemTransactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 	}
@@ -145,6 +149,10 @@ public class RssFeedWriter implements ItemWriter<RssFeedMessage> {
             insertedCount = customBatchPostRepository.saveAllPost(posts);
         }
         savePostTags(items);
+        if (insertedCount > 0) {
+            RssFeedMessage item = items.get(0);
+            classificationService.classifyOrMoveToOnHold(posts.get(0), item.description(), item.tags());
+        }
         return insertedCount;
     }
 
