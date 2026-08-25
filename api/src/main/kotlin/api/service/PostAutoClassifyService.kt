@@ -178,7 +178,7 @@ class PostAutoClassifyService(
             ),
             "culture" to listOf(
                 "개발 문화", "조직 문화", "팀 문화", "tech culture", "성장", "회고",
-                "retrospective", "온보딩", "onboarding", "채용", "hiring", "협업",
+                "retrospective", "온보딩", "onboarding", "협업",
                 "collaboration", "애자일", "agile", "스크럼", "scrum", "개발자 문화",
                 "엔지니어링 문화"
             ),
