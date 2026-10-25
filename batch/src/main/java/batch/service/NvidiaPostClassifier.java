@@ -46,7 +46,7 @@ public class NvidiaPostClassifier {
             @Value("${classification.llm.api-key:}") String apiKey,
             @Value("${classification.llm.model:deepseek-ai/deepseek-v4-flash}") String model,
             @Value("${classification.llm.reasoning-effort:none}") String reasoningEffort,
-            @Value("${classification.llm.timeout-millis:30000}") long timeoutMillis,
+            @Value("${classification.llm.timeout-millis:120000}") long timeoutMillis,
             @Value("${classification.llm.min-interval-millis:1500}") long minIntervalMillis
     ) {
         this.objectMapper = objectMapper;
@@ -65,13 +65,16 @@ public class NvidiaPostClassifier {
                 .build();
     }
 
+    public boolean isAvailable() {
+        return enabled && StringUtils.hasText(apiKey);
+    }
+
     public Optional<Category> classify(
             Post post,
-            String description,
             Collection<String> tags,
             Map<String, Category> categoryBySlug
     ) {
-        if (!enabled || !StringUtils.hasText(apiKey) || categoryBySlug.isEmpty()) {
+        if (!isAvailable() || categoryBySlug.isEmpty()) {
             return Optional.empty();
         }
 
@@ -81,7 +84,7 @@ public class NvidiaPostClassifier {
                     .uri("/chat/completions")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(buildRequest(post, description, tags, categoryBySlug))
+                    .body(buildRequest(post, tags, categoryBySlug))
                     .retrieve()
                     .body(ChatCompletionResponse.class);
 
@@ -105,12 +108,10 @@ public class NvidiaPostClassifier {
                     post.getPostId(), result.slug(), result.confidence());
             return Optional.of(category);
         } catch (HttpStatusCodeException e) {
-            log.warn("[적재 분류] NVIDIA LLM 호출 실패. postId={}, status={}",
-                    post.getPostId(), e.getStatusCode().value());
-            return Optional.empty();
+            throw new PostClassificationException(
+                    "NVIDIA LLM 호출 실패. postId=%d, status=%d".formatted(post.getPostId(), e.getStatusCode().value()), e);
         } catch (Exception e) {
-            log.warn("[적재 분류] NVIDIA LLM 분류 실패. postId={}", post.getPostId(), e);
-            return Optional.empty();
+            throw new PostClassificationException("NVIDIA LLM 호출 실패. postId=%d".formatted(post.getPostId()), e);
         }
     }
 
@@ -130,7 +131,6 @@ public class NvidiaPostClassifier {
 
     private ChatCompletionRequest buildRequest(
             Post post,
-            String description,
             Collection<String> tags,
             Map<String, Category> categoryBySlug
     ) {
@@ -151,10 +151,9 @@ public class NvidiaPostClassifier {
 
                 post:
                 title: %s
-                description: %s
                 sourceSiteName: %s
                 tags: %s
-                """.formatted(categories, nullToEmpty(post.getTitle()), nullToEmpty(description),
+                """.formatted(categories, nullToEmpty(post.getTitle()),
                 nullToEmpty(post.getSourceSiteName()), tagText);
 
         return new ChatCompletionRequest(

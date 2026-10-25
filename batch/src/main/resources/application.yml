@@ -49,6 +49,10 @@ spring:
       security.protocol: ${techgather.kafka.security.protocol:}
       sasl.mechanism: ${techgather.kafka.sasl.mechanism:}
       sasl.jaas.config: ${techgather.kafka.sasl.jaas-config:}
+  task:
+    scheduling:
+      pool:
+        size: 2
   batch:
     job:
       enabled: ${techgather.batch.job.enabled:true}
@@ -64,13 +68,17 @@ post:
     daily-count: ${techgather.post.release.daily-count:5}
 
 classification:
+  batch-size: ${techgather.classification.batch-size:40}
+  schedule:
+    cron: ${techgather.classification.schedule.cron:0 */10 * * * *}
+    zone: ${techgather.classification.schedule.zone:Asia/Seoul}
   llm:
     enabled: ${techgather.classification.llm.enabled:false}
     base-url: ${techgather.classification.llm.base-url:https://integrate.api.nvidia.com/v1}
     api-key: ${techgather.nvidia.api-key:}
     model: ${techgather.classification.llm.model:deepseek-ai/deepseek-v4-flash}
     reasoning-effort: ${techgather.classification.llm.reasoning-effort:none}
-    timeout-millis: ${techgather.classification.llm.timeout-millis:30000}
+    timeout-millis: ${techgather.classification.llm.timeout-millis:120000}
     min-interval-millis: ${techgather.classification.llm.min-interval-millis:1500}
 
 discord:
