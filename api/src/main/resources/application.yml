@@ -60,9 +60,9 @@ discord:
 classification:
   llm:
     enabled: ${techgather.classification.llm.enabled:false}
-    base-url: ${techgather.classification.llm.base-url:https://integrate.api.nvidia.com/v1}
-    api-key: ${techgather.nvidia.api-key:}
-    model: ${techgather.classification.llm.model:deepseek-ai/deepseek-v4-flash}
+    base-url: ${techgather.classification.llm.base-url:https://api.openai.com/v1}
+    api-key: ${techgather.openai.api-key:${OPENAI_API_KEY:}}
+    model: ${techgather.classification.llm.model:gpt-5.4-mini}
     reasoning-effort: ${techgather.classification.llm.reasoning-effort:none}
     timeout-millis: ${techgather.classification.llm.timeout-millis:30000}
     min-interval-millis: ${techgather.classification.llm.min-interval-millis:1500}

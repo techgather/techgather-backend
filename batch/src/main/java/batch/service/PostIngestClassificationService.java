@@ -30,7 +30,7 @@ public class PostIngestClassificationService {
     private final CategoryRepository categoryRepository;
     private final PostRepository postRepository;
     private final PostCategoryRepository postCategoryRepository;
-    private final NvidiaPostClassifier postClassifier;
+    private final OpenAiPostClassifier postClassifier;
     private final TransactionTemplate transactionTemplate;
     private final int batchSize;
     private final SnowFlake snowflake = SnowFlake.getInstance();
@@ -39,7 +39,7 @@ public class PostIngestClassificationService {
             CategoryRepository categoryRepository,
             PostRepository postRepository,
             PostCategoryRepository postCategoryRepository,
-            NvidiaPostClassifier postClassifier,
+            OpenAiPostClassifier postClassifier,
             PlatformTransactionManager transactionManager,
             @Value("${classification.batch-size:40}") int batchSize
     ) {

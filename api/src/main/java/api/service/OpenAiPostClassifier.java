@@ -26,9 +26,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
-public class NvidiaPostClassifier {
+public class OpenAiPostClassifier {
 
-    private static final Logger log = LoggerFactory.getLogger(NvidiaPostClassifier.class);
+    private static final Logger log = LoggerFactory.getLogger(OpenAiPostClassifier.class);
 
     private final boolean enabled;
     private final String apiKey;
@@ -45,12 +45,12 @@ public class NvidiaPostClassifier {
     private static final Pattern SLUG_PATTERN = Pattern.compile("\"slug\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern CONFIDENCE_PATTERN = Pattern.compile("\"confidence\"\\s*:\\s*([0-9.]+)");
 
-    public NvidiaPostClassifier(
+    public OpenAiPostClassifier(
             ObjectMapper objectMapper,
             @Value("${classification.llm.enabled:false}") boolean enabled,
-            @Value("${classification.llm.base-url:https://integrate.api.nvidia.com/v1}") String baseUrl,
+            @Value("${classification.llm.base-url:https://api.openai.com/v1}") String baseUrl,
             @Value("${classification.llm.api-key:}") String apiKey,
-            @Value("${classification.llm.model:deepseek-ai/deepseek-v4-flash}") String model,
+            @Value("${classification.llm.model:gpt-5.4-mini}") String model,
             @Value("${classification.llm.reasoning-effort:none}") String reasoningEffort,
             @Value("${classification.llm.timeout-millis:30000}") long timeoutMillis,
             @Value("${classification.llm.min-interval-millis:1500}") long minIntervalMillis,
@@ -114,24 +114,24 @@ public class NvidiaPostClassifier {
 
             Category category = categoryBySlug.get(result.slug());
             if (category == null) {
-                log.warn("[분류] NVIDIA LLM이 존재하지 않는 카테고리를 반환했습니다. postId={}, slug={}", post.getPostId(), result.slug());
+                log.warn("[분류] OpenAI LLM이 존재하지 않는 카테고리를 반환했습니다. postId={}, slug={}", post.getPostId(), result.slug());
                 return Optional.empty();
             }
 
-            log.info("[분류] NVIDIA LLM 분류 성공. postId={}, slug={}, confidence={}", post.getPostId(), result.slug(), result.confidence());
+            log.info("[분류] OpenAI LLM 분류 성공. postId={}, slug={}, confidence={}", post.getPostId(), result.slug(), result.confidence());
             return Optional.of(category);
         } catch (HttpStatusCodeException e) {
             int statusCode = e.getStatusCode().value();
             if (statusCode == 429 || statusCode == 503) {
-                disableForCurrentRun("[분류] NVIDIA LLM 호출 한도 도달. 이번 분류 실행에서는 키워드 fallback만 사용합니다. status=%d, body=%s"
+                disableForCurrentRun("[분류] OpenAI LLM 호출 한도 도달. 이번 분류 실행에서는 키워드 fallback만 사용합니다. status=%d, body=%s"
                         .formatted(statusCode, abbreviate(e.getResponseBodyAsString())));
                 return Optional.empty();
             }
-            log.warn("[분류] NVIDIA LLM 호출 실패. postId={}, status={}, body={}",
+            log.warn("[분류] OpenAI LLM 호출 실패. postId={}, status={}, body={}",
                     post.getPostId(), statusCode, abbreviate(e.getResponseBodyAsString()));
             return Optional.empty();
         } catch (Exception e) {
-            log.warn("[분류] NVIDIA LLM 분류 실패. postId={}", post.getPostId(), e);
+            log.warn("[분류] OpenAI LLM 분류 실패. postId={}", post.getPostId(), e);
             return Optional.empty();
         }
     }
@@ -142,7 +142,7 @@ public class NvidiaPostClassifier {
         }
         if (maxCallsPerRun > 0 && callsThisRun >= maxCallsPerRun) {
             disabledForRun = true;
-            log.info("[분류] NVIDIA LLM 실행당 호출 제한 도달. maxCallsPerRun={}", maxCallsPerRun);
+            log.info("[분류] OpenAI LLM 실행당 호출 제한 도달. maxCallsPerRun={}", maxCallsPerRun);
             return false;
         }
         callsThisRun++;
@@ -164,7 +164,7 @@ public class NvidiaPostClassifier {
                 Thread.sleep(nextAllowedAt - now);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new IllegalStateException("Interrupted while waiting for NVIDIA LLM rate limit", e);
+                throw new IllegalStateException("Interrupted while waiting for OpenAI LLM rate limit", e);
             }
         }
         lastRequestAtMillis = System.currentTimeMillis();
@@ -202,10 +202,9 @@ public class NvidiaPostClassifier {
                         new Message("system", "Return exactly one compact JSON object and no other text. Schema: {\"slug\":\"category-slug-or-null\",\"confidence\":0.0}."),
                         new Message("user", userPrompt)
                 ),
-                0.0,
-                0.7,
-                128,
+                512,
                 reasoningEffort,
+                Map.of("type", "json_object"),
                 false
         );
     }
@@ -225,10 +224,10 @@ public class NvidiaPostClassifier {
         } catch (Exception e) {
             ClassificationResult result = parseSlugLeniently(cleaned);
             if (result != null) {
-                log.warn("[분류] NVIDIA LLM 응답이 엄격한 JSON이 아니어서 slug만 추출했습니다. response={}", abbreviate(cleaned));
+                log.warn("[분류] OpenAI LLM 응답이 엄격한 JSON이 아니어서 slug만 추출했습니다. response={}", abbreviate(cleaned));
                 return result;
             }
-            log.warn("[분류] NVIDIA LLM 응답 JSON 파싱 실패. response={}", abbreviate(cleaned));
+            log.warn("[분류] OpenAI LLM 응답 JSON 파싱 실패. response={}", abbreviate(cleaned));
             return null;
         }
     }
@@ -285,10 +284,9 @@ public class NvidiaPostClassifier {
     private record ChatCompletionRequest(
             String model,
             List<Message> messages,
-            double temperature,
-            @JsonProperty("top_p") double topP,
-            @JsonProperty("max_tokens") int maxTokens,
+            @JsonProperty("max_completion_tokens") int maxCompletionTokens,
             @JsonProperty("reasoning_effort") String reasoningEffort,
+            @JsonProperty("response_format") Map<String, String> responseFormat,
             boolean stream
     ) {
     }

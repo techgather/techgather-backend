@@ -40,7 +40,7 @@ class PostIngestClassificationServiceTest {
     private PostCategoryRepository postCategoryRepository;
 
     @Mock
-    private NvidiaPostClassifier postClassifier;
+    private OpenAiPostClassifier postClassifier;
 
     @Mock
     private PlatformTransactionManager transactionManager;

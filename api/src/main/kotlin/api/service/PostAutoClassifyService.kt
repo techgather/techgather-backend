@@ -19,7 +19,7 @@ class PostAutoClassifyService(
     private val postRepository: PostRepository,
     private val categoryRepository: CategoryRepository,
     private val postCategoryRepository: PostCategoryRepository,
-    private val nvidiaPostClassifier: NvidiaPostClassifier
+    private val openAiPostClassifier: OpenAiPostClassifier
 ) {
 
     private val snowFlake = SnowFlake.getInstance()
@@ -45,10 +45,10 @@ class PostAutoClassifyService(
         val llmClassifiedPostIds = mutableListOf<Long>()
         val keywordClassifiedPostIds = mutableListOf<Long>()
         val onHoldPostIds = mutableListOf<Long>()
-        nvidiaPostClassifier.resetRunState()
+        openAiPostClassifier.resetRunState()
 
         postById.values.forEach { post ->
-            val llmCategory = nvidiaPostClassifier.classify(post, categoryBySlug)
+            val llmCategory = openAiPostClassifier.classify(post, categoryBySlug)
             val category = if (llmCategory.isPresent) llmCategory.get() else resolveCategory(post, categoryBySlug)
             if (category == null) {
                 onHoldPostIds.add(post.postId)

@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class NvidiaPostClassifier {
+public class OpenAiPostClassifier {
 
     private static final Pattern SLUG_PATTERN = Pattern.compile("\"slug\"\\s*:\\s*\"([^\"]+)\"");
 
@@ -39,12 +39,12 @@ public class NvidiaPostClassifier {
     private final ObjectMapper objectMapper;
     private long lastRequestAtMillis;
 
-    public NvidiaPostClassifier(
+    public OpenAiPostClassifier(
             ObjectMapper objectMapper,
             @Value("${classification.llm.enabled:false}") boolean enabled,
-            @Value("${classification.llm.base-url:https://integrate.api.nvidia.com/v1}") String baseUrl,
+            @Value("${classification.llm.base-url:https://api.openai.com/v1}") String baseUrl,
             @Value("${classification.llm.api-key:}") String apiKey,
-            @Value("${classification.llm.model:deepseek-ai/deepseek-v4-flash}") String model,
+            @Value("${classification.llm.model:gpt-5.4-mini}") String model,
             @Value("${classification.llm.reasoning-effort:none}") String reasoningEffort,
             @Value("${classification.llm.timeout-millis:120000}") long timeoutMillis,
             @Value("${classification.llm.min-interval-millis:1500}") long minIntervalMillis
@@ -99,19 +99,19 @@ public class NvidiaPostClassifier {
 
             Category category = categoryBySlug.get(result.slug());
             if (category == null) {
-                log.warn("[적재 분류] NVIDIA LLM이 존재하지 않는 카테고리를 반환했습니다. postId={}, slug={}",
+                log.warn("[적재 분류] OpenAI LLM이 존재하지 않는 카테고리를 반환했습니다. postId={}, slug={}",
                         post.getPostId(), result.slug());
                 return Optional.empty();
             }
 
-            log.info("[적재 분류] NVIDIA LLM 분류 성공. postId={}, slug={}, confidence={}",
+            log.info("[적재 분류] OpenAI LLM 분류 성공. postId={}, slug={}, confidence={}",
                     post.getPostId(), result.slug(), result.confidence());
             return Optional.of(category);
         } catch (HttpStatusCodeException e) {
             throw new PostClassificationException(
-                    "NVIDIA LLM 호출 실패. postId=%d, status=%d".formatted(post.getPostId(), e.getStatusCode().value()), e);
+                    "OpenAI LLM 호출 실패. postId=%d, status=%d".formatted(post.getPostId(), e.getStatusCode().value()), e);
         } catch (Exception e) {
-            throw new PostClassificationException("NVIDIA LLM 호출 실패. postId=%d".formatted(post.getPostId()), e);
+            throw new PostClassificationException("OpenAI LLM 호출 실패. postId=%d".formatted(post.getPostId()), e);
         }
     }
 
@@ -123,7 +123,7 @@ public class NvidiaPostClassifier {
                 Thread.sleep(nextAllowedAt - now);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new IllegalStateException("Interrupted while waiting for NVIDIA LLM rate limit", e);
+                throw new IllegalStateException("Interrupted while waiting for OpenAI LLM rate limit", e);
             }
         }
         lastRequestAtMillis = System.currentTimeMillis();
@@ -162,10 +162,9 @@ public class NvidiaPostClassifier {
                         new Message("system", "Return exactly one compact JSON object and no other text. Schema: {\"slug\":\"category-slug-or-null\",\"confidence\":0.0}."),
                         new Message("user", prompt)
                 ),
-                0.0,
-                0.7,
-                128,
+                512,
                 reasoningEffort,
+                Map.of("type", "json_object"),
                 false
         );
     }
@@ -197,10 +196,9 @@ public class NvidiaPostClassifier {
     private record ChatCompletionRequest(
             String model,
             List<Message> messages,
-            double temperature,
-            @JsonProperty("top_p") double topP,
-            @JsonProperty("max_tokens") int maxTokens,
+            @JsonProperty("max_completion_tokens") int maxCompletionTokens,
             @JsonProperty("reasoning_effort") String reasoningEffort,
+            @JsonProperty("response_format") Map<String, String> responseFormat,
             boolean stream
     ) {
     }
