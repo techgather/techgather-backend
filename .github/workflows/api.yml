@@ -18,7 +18,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     env:
       ECR_REPOSITORY: tg-dev
       SERVICE_NAME: tg-api-dev
@@ -60,9 +60,9 @@ jobs:
       - name: Execute Remote Deployment Script
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.TG_DEV_SERVER_IP }}
+          host: ${{ secrets.TG_PROD_SERVER_IP }}
           username: ubuntu
-          key: ${{ secrets.TG_DEV_SERVER_SSH_KEY }}
+          key: ${{ secrets.TG_PROD_SERVER_SSH_KEY }}
           script: |
             echo "Starting API deployment script..."
             cd ~/app/scripts
